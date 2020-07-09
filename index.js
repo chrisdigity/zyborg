@@ -120,12 +120,15 @@ Client.on("voiceStateUpdate", (old, cur) => {
 
    /* MUSIC CHANNEL
     * give instruction on how to use the music bot */
-   if(cur.channelID == CHID_MUSIC) {
+   if(cur.channelID == CHID_MUSIC && !cur.member.user.bot) {
       Client.channels.fetch(CHID_SPAM).then(channel => {
          channel.send(
             `<@${cur.id}> The music channel is no longer automatic :cry:\n` +
-            'Instead, you can enter the following command to start music:\n' +
-            '```!play https://soundcloud.com/chrisdigity/sets/2020-candidates```'
+            'Instead, you can use the following music commands:\n' +
+            '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\nOR\n' +
+            '```-play https://soundcloud.com/chrisdigity/sets/gigamix\nOR\n' +
+            '```-play https://soundcloud.com/chrisdigity/sets/btp\n' +
+            '-shuffle/-next/-pause/-resume```'
          ).catch(console.error)
       }).catch(console.error)
    }
