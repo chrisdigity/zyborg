@@ -28,6 +28,10 @@ const Path = require("path")
 const Discord = require("discord.js")
 const Client = new Discord.Client()
 
+/* Voice connection and dispatcher containers */
+let Vconn = null
+let Vqueue = []
+
 /* function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function() {
    Client.channels.fetch(CHID_SPAM).then(channel => {
@@ -54,22 +58,18 @@ const CLEAR_SPAM = function() {
 }
 
 /* function to play intro sound */
-const PLAY_INTRO = function(file) {
-   /* clear existing dispatcher finish disconnect */
-   if(Vdisp) Vdisp.on('finish', () => {})
-
-   /* play mp3 file */
-   Vdisp = Vconn.play(file)
-   Vdisp.on('finish', () => {
-      Vdisp = null
-      Vconn.disconnect()
-      Vconn = null
+const PLAY_NEXT_INTRO = function(connection) {
+   /* store voice connection */
+   if(!Vconn) Vconn = connection
+   /* play next mp3 file */
+   Vconn.play(Vqueue.shift()).on('finish', () => {
+      if(Vqueue.length) PLAY_NEXT_INTRO()
+      else {
+         Vconn.disconnect()
+         Vconn = null
+      }
    })
 }
-
-/* Voice connection and dispatcher containers */
-let Vconn = null
-let Vdisp = null
 
 
 /* Begin Client events... */
@@ -124,7 +124,7 @@ Client.on("voiceStateUpdate", (old, cur) => {
       Client.channels.fetch(CHID_SPAM).then(channel => {
          channel.send(
             `<@${cur.id}> The music channel is no longer automatic :cry:\n` +
-            'Instead, you can enter the following command:\n' +
+            'Instead, you can enter the following command to start music:\n' +
             '```!play https://soundcloud.com/chrisdigity/sets/2020-candidates```'
          ).catch(console.error)
       }).catch(console.error)
@@ -144,12 +144,8 @@ Client.on("voiceStateUpdate", (old, cur) => {
    if(!FS.existsSync(mp3file)) return
 
    /* join channel and/or play intro */
-   if(Vconn) PLAY_INTRO(mp3file)
-   else
-      cur.member.voice.channel.join().then(connection => {
-         Vconn = connection
-         PLAY_INTRO(mp3file)
-      }).catch(console.error)
+   if(Vconn) Vqueue.push(mp3file)
+   else cur.member.voice.channel.join().then(PLAY_NEXT_INTRO).catch(console.error)
 })
 
 process.once('SIGTERM', () => {
