@@ -48,8 +48,8 @@ const CLEAR_SPAM = function() {
       }).catch(console.error)
    }).catch(console.error)
 
-   /* repeat clear event in ~24 hours */
-   setTimeout(CLEAR_SPAM, 86400000)
+   /* repeat clear event in ~24 hours *
+   setTimeout(CLEAR_SPAM, 86400000) */
 }
 
 /* function to play intro sound */
@@ -83,16 +83,14 @@ Client.on("presenceUpdate", (old, cur) => {
    /* acquire presence data and log with a message */
    let platform = Object.keys(cur.clientStatus)[0] || '*unknown*'
    let action = 'went'
-   let name = `${cur.user.tag}`
 
    /* conditional data */
    if(cur.status == 'online') action = 'came'
-   if(cur.member.nickname) name += `[*${cur.member.nickname}*]`
 
    /* send message */
    Client.channels.fetch(CHID_PRESENCE).then(channel => {
       channel.send(
-         `${name} ${action} ${cur.status} (${platform})`
+         `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${cur.status} (${platform})`
       ).catch(console.error)
    }).catch(console.error)
 })
