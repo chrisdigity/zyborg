@@ -125,10 +125,10 @@ Client.on("voiceStateUpdate", (old, cur) => {
          channel.send(
             `<@${cur.id}> The music channel is no longer automatic :cry:\n` +
             'Instead, you can use the following music commands:\n' +
-            '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\nOR\n' +
-            '-play https://soundcloud.com/chrisdigity/sets/gigamix\nOR\n' +
-            '-play https://soundcloud.com/chrisdigity/sets/btp\n' +
-            '-shuffle/-next/-pause/-resume```'
+            '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\n' +
+            '-play https://soundcloud.com/chrisdigity/sets/gigamix\n' +
+            '-play https://soundcloud.com/chrisdigity/sets/btp\n\nCONTROLS\n' +
+            '-shuffle/-next/-pause/-resume/-stop```'
          ).catch(console.error)
       }).catch(console.error)
    }
