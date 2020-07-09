@@ -63,6 +63,7 @@ const PLAY_INTRO = function(file) {
    Vdisp.on('finish', () => {
       Vdisp = null
       Vconn.disconnect()
+      Vconn = null
    })
 }
 
