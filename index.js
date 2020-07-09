@@ -59,7 +59,10 @@ const PLAY_INTRO = function(file) {
 
    /* play mp3 file */
    Vdisp = Vconn.play(file)
-   Vdisp.on('finish', () => { Vconn.disconnect() })
+   Vdisp.on('finish', () => {
+      Vdisp = null
+      Vconn.disconnect()
+   })
 }
 
 /* Voice connection and dispatcher containers */
@@ -127,11 +130,12 @@ Client.on("voiceStateUpdate", (old, cur) => {
    if(!FS.existsSync(mp3file)) return
 
    /* join channel and/or play intro */
-   if(!Vconn) 
+   if(Vconn) PLAY_INTRO(mp3file)
+   else
       cur.member.voice.channel.join().then(connection => {
          Vconn = connection
+         PLAY_INTRO(mp3file)
       }).catch(console.error)
-   PLAY_INTRO(mp3file)
 })
 
 process.once('SIGTERM', () => {
