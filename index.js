@@ -123,8 +123,7 @@ Client.on("voiceStateUpdate", (old, cur) => {
    if(cur.channelID == CHID_MUSIC && !cur.member.user.bot) {
       Client.channels.fetch(CHID_SPAM).then(channel => {
          channel.send(
-            `<@${cur.id}> The music channel is no longer automatic :cry:\n` +
-            'Instead, you can use the following music commands:\n' +
+            `<@${cur.id}>, use the following music commands:\n` +
             '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\n' +
             '-play https://soundcloud.com/chrisdigity/sets/gigamix\n' +
             '-play https://soundcloud.com/chrisdigity/sets/btp\n\nCONTROLS\n' +
