@@ -12,8 +12,9 @@ require("dotenv").config()
 const CHID_SPAM = '675644867447095296'
 const CHID_VOICE = '720459302963380274'
 const CHID_PRESENCE = '730596136938635334'
+const CHID_MUSIC = '725473321868591104'
 const CHIDS_NOINTRO = [
-   '725473321868591104',
+   CHID_MUSIC,
 ]
 
 /**************************
@@ -115,6 +116,18 @@ Client.on("voiceStateUpdate", (old, cur) => {
          `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${voice}`
       ).catch(console.error)
    }).catch(console.error)
+
+   /* MUSIC CHANNEL
+    * give instruction on how to use the music bot */
+   if(cur.channelID == CHID_MUSIC) {
+      Client.channels.fetch(CHID_SPAM).then(channel => {
+         channel.send(
+            `<@${cur.id}> The music channel is no longer automatic :cry:\n` +
+            'Instead, you can enter the following command:\n' +
+            '```!play https://soundcloud.com/chrisdigity/sets/2020-candidates```'
+         ).catch(console.error)
+      }).catch(console.error)
+   }
 
    /* INTRODUCTION SOUNDS
     * play fun sounds for people entering voice channels
