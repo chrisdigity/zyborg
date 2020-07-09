@@ -126,8 +126,8 @@ Client.on("voiceStateUpdate", (old, cur) => {
             `<@${cur.id}> The music channel is no longer automatic :cry:\n` +
             'Instead, you can use the following music commands:\n' +
             '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\nOR\n' +
-            '```-play https://soundcloud.com/chrisdigity/sets/gigamix\nOR\n' +
-            '```-play https://soundcloud.com/chrisdigity/sets/btp\n' +
+            '-play https://soundcloud.com/chrisdigity/sets/gigamix\nOR\n' +
+            '-play https://soundcloud.com/chrisdigity/sets/btp\n' +
             '-shuffle/-next/-pause/-resume```'
          ).catch(console.error)
       }).catch(console.error)
@@ -144,11 +144,16 @@ Client.on("voiceStateUpdate", (old, cur) => {
    if(cur.channel.members.array().length < 3) return
 
    let mp3file = Path.join(__dirname, `./sound/${cur.id}.mp3`)
+   /* check file exists */
    if(!FS.existsSync(mp3file)) return
 
+   /* avoid duplicate queues */
+   if(Vqueue.includes(mp3file)) return
+   Vqueue.push(mp3file)
+
    /* join channel and/or play intro */
-   if(Vconn) Vqueue.push(mp3file)
-   else cur.member.voice.channel.join().then(PLAY_NEXT_INTRO).catch(console.error)
+   if(!Vconn)
+      cur.member.voice.channel.join().then(PLAY_NEXT_INTRO).catch(console.error)
 })
 
 process.once('SIGTERM', () => {
