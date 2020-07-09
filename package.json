@@ -1,0 +1,13 @@
+{
+   "name": "Zyborg",
+   "version": "0.0.1",
+   "main": "index.js",
+   "scripts": {
+      "start": "node index.js"
+   },
+   "dependencies": {
+      "dotenv": "^8.2.0",
+      "discord.js": "^12.2.0",
+      "@discordjs/opus": "^0.3.2"
+   }
+}
