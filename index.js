@@ -126,6 +126,18 @@ Client.on("voiceStateUpdate", (old, cur) => {
    /* MUSIC CHANNEL
     * give instruction on how to use the music bot */
    if(cur.channelID == CHID_MUSIC && !cur.member.user.bot) {
+      /******************/
+      /* BOT call BOT test */
+      cur.member.voice.channel.join().then(connection => {
+         Client.channels.fetch(CHID_SPAM).then(channel => {
+            channel.send(
+               '-play <https://soundcloud.com/chrisdigity/sets/2020-candidates>'
+            ).then(() => {
+               connection.disconnect()
+            }).catch(console.error)
+         }).catch(console.error)
+      }).catch(console.error)
+      /******************/
       Client.channels.fetch(CHID_SPAM).then(channel => {
          channel.send(
             `<@${cur.id}>, use the following music commands:\n` +
