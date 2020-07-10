@@ -10,10 +10,11 @@ require("dotenv").config()
 
 /* Channel IDs*/
 const CHID_SPAM = '675644867447095296'
+const CHID_SERVER = '651364689665720350'
 const CHID_PRESENCE = '730596136938635334'
 const CHID_VOICE = '720459302963380274'
-const CHID_MUSIC = '725473321868591104'
-const CHID_ANIME = '730931465793044550'
+const CHID_MUSIC = '725473321868591104'  //voice
+const CHID_ANIME = '730931465793044550'  //voice
 const CHIDS_NOINTRO = [
    CHID_MUSIC, CHID_ANIME,
 ]
@@ -88,6 +89,30 @@ Client.on("ready", () => {
    console.log(`${Client.user.tag} is ready...`)
    CLEAR_SPAM()
 })
+/* ...on guildMemberAdd, log event (hello) */
+Client.on("guildMemberAdd", member => {
+   /* send message */
+   Client.channels.fetch(CHID_SERVER).then(channel => {
+      let name = member.user.tag
+      if(member.nickname)
+         name += `[${member.nickname}]`
+      channel.send(
+         `:white_check_mark: **${name}** just __entered__ the server :wave:`
+      ).catch(console.error)
+   }).catch(console.error)
+})
+/* ...on guildMemberRemove, log event (goodbye) */
+Client.on("guildMemberRemove", member => {
+   /* send message */
+   Client.channels.fetch(CHID_SERVER).then(channel => {
+      let name = member.user.tag
+      if(member.nickname)
+         name += `[${member.nickname}]`
+      channel.send(
+         `:x: **${name}** just __exited__ the server :call_me:`
+      ).catch(console.error)
+   }).catch(console.error)
+})
 /* ...on presenceUpdate, log update appropriately */
 Client.on("presenceUpdate", (old, cur) => {
    /* acquire presence data and log with a message */
@@ -126,26 +151,16 @@ Client.on("voiceStateUpdate", (old, cur) => {
    /* MUSIC CHANNEL
     * give instruction on how to use the music bot */
    if(cur.channelID == CHID_MUSIC && !cur.member.user.bot) {
-      /******************/
-      /* BOT call BOT test */
-      cur.member.voice.channel.join().then(connection => {
-         Client.channels.fetch(CHID_SPAM).then(channel => {
-            channel.send(
-               '-play <https://soundcloud.com/chrisdigity/sets/2020-candidates>'
-            ).then(() => {
-               connection.disconnect()
-            }).catch(console.error)
-         }).catch(console.error)
-      }).catch(console.error)
-      /******************/
       Client.channels.fetch(CHID_SPAM).then(channel => {
          channel.send(
-            `<@${cur.id}>, use the following music commands:\n` +
+            `<@${cur.id}>, use the following commands in <#${CHID_MUSIC}>:\n` +
             '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\n' +
             '-play https://soundcloud.com/chrisdigity/sets/gigamix\n' +
             '-play https://soundcloud.com/chrisdigity/sets/btp\n\nCONTROLS\n' +
             '-shuffle/-next/-pause/-resume/-stop```'
-         ).catch(console.error)
+         ).then(msg => {
+            msg.delete(60000)
+         }).catch(console.error)
       }).catch(console.error)
    }
 
