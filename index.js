@@ -159,7 +159,7 @@ Client.on("voiceStateUpdate", (old, cur) => {
             '-play https://soundcloud.com/chrisdigity/sets/btp\n\nCONTROLS\n' +
             '-shuffle/-next/-pause/-resume/-stop```'
          ).then(msg => {
-            msg.delete(60000)
+            msg.delete({ timeout: 60000 })
          }).catch(console.error)
       }).catch(console.error)
    }
