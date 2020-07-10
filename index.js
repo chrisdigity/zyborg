@@ -10,17 +10,21 @@ require("dotenv").config()
 
 /* Channel IDs*/
 const CHID_SPAM = '675644867447095296'
-const CHID_VOICE = '720459302963380274'
 const CHID_PRESENCE = '730596136938635334'
+const CHID_VOICE = '720459302963380274'
 const CHID_MUSIC = '725473321868591104'
+const CHID_ANIME = '730931465793044550'
 const CHIDS_NOINTRO = [
-   CHID_MUSIC,
+   CHID_MUSIC, CHID_ANIME,
 ]
 
 /**************************
  * END USER CONFIGURATION *
  **************************/
 
+
+/* CONSTANTS */
+const MINUTES10 = 10 * 60 * 1000
 
 /* required modules */
 const FS = require("fs")
@@ -31,6 +35,7 @@ const Client = new Discord.Client()
 /* Voice connection and dispatcher containers */
 let Vconn = null
 let Vqueue = []
+let Vcooldown = {}
 
 /* function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function() {
@@ -137,22 +142,24 @@ Client.on("voiceStateUpdate", (old, cur) => {
     * - DOES NOT PLAY when moving between voice channels or streaming
     * - DOES NOT PLAY in CHIDS_NOINTRO channels
     * - DOES NOT PLAY if there is only one (1) other person in the channel
+    * - DOES NOT PLAY if user ID is still in cooldown
     * - DOES NOT PLAY if no sound file exists for user ID */
-   if(action != 'joined') return
-   if(CHIDS_NOINTRO.includes(cur.channelID)) return
-   if(cur.channel.members.array().length < 3) return
-
-   let mp3file = Path.join(__dirname, `./sound/${cur.id}.mp3`)
-   /* check file exists */
-   if(!FS.existsSync(mp3file)) return
-
-   /* avoid duplicate queues */
-   if(Vqueue.includes(mp3file)) return
-   Vqueue.push(mp3file)
-
-   /* join channel and/or play intro */
-   if(!Vconn)
-      cur.member.voice.channel.join().then(PLAY_NEXT_INTRO).catch(console.error)
+   if(action == 'left') {
+      Vcooldown[cur.id] = Date.now()
+   } else if(action == 'joined' &&
+             !CHIDS_NOINTRO.includes(cur.channelID) &&
+             cur.channel.members.array().length > 2 &&
+             (!Vcooldown.hasOwnProperty(cur.id) || Vcooldown[cur.id] < Date.now() - MINUTES10)) {
+      /* check file exists */
+      let mp3file = Path.join(__dirname, `./sound/${cur.id}.mp3`)
+      if(FS.existsSync(mp3file)){
+         /* queue intro sound */
+         Vqueue.push(mp3file)
+         /* join channel and/or play intro */
+         if(!Vconn)
+            cur.member.voice.channel.join().then(PLAY_NEXT_INTRO).catch(console.error)
+      }
+   }
 })
 
 process.once('SIGTERM', () => {
