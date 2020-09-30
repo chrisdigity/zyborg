@@ -14,10 +14,11 @@ const CHID_SERVER = '651364689665720350'
 const CHID_PRESENCE = '730596136938635334'
 const CHID_VOICE = '720459302963380274'
 const CHID_A2C = '651366291160170516'    //voice
+const CHID_FOCUS = '651374941840867338'  //voice
 const CHID_MUSIC = '725473321868591104'  //voice
 const CHID_ANIME = '730931465793044550'  //voice
 const CHIDS_NOINTRO = [
-   CHID_A2C, CHID_MUSIC, CHID_ANIME,
+   CHID_A2C, CHID_FOCUS, CHID_MUSIC, CHID_ANIME,
 ]
 
 /**************************
@@ -32,16 +33,17 @@ const MINUTES10 = 10 * 60 * 1000
 const FS = require("fs")
 const Path = require("path")
 const Discord = require("discord.js")
-const Client = new Discord.Client()
+const Zyborg = new Discord.Client()
+const ZJ_Chillstep = new Discord.Client()
 
 /* Voice connection and dispatcher containers */
 let Vconn = null
 let Vqueue = []
 let Vcooldown = {}
 
-/* function to clear spam channel every ~24 hours */
+/* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function() {
-   Client.channels.fetch(CHID_SPAM).then(channel => {
+   Zyborg.channels.fetch(CHID_SPAM).then(channel => {
       /* featch messages from channel */
       channel.messages.fetch().then(messages => {
          /* if more than 1 message ... */
@@ -79,21 +81,22 @@ const PLAY_NEXT_INTRO = function(connection) {
 }
 
 
-/* Begin Client events... */
+/**************************/
+/* Begin ZYBORG events... */
 
 /* ...on disconnect, log event */
-Client.on("disconnect", () => {
-   console.log(`${Client.user.tag} disconnected...`)
+Zyborg.on("disconnect", () => {
+   console.log(`${Zyborg.user.tag} disconnected...`)
 })
 /* ...on ready, log event and begin clear spam event */
-Client.on("ready", () => {
-   console.log(`${Client.user.tag} is ready...`)
+Zyborg.on("ready", () => {
+   console.log(`${Zyborg.user.tag} is ready...`)
    CLEAR_SPAM()
 })
 /* ...on guildMemberAdd, log event (hello) */
-Client.on("guildMemberAdd", member => {
+Zyborg.on("guildMemberAdd", member => {
    /* send message */
-   Client.channels.fetch(CHID_SERVER).then(channel => {
+   Zyborg.channels.fetch(CHID_SERVER).then(channel => {
       let name = member.user.tag
       if(member.nickname)
          name += `[${member.nickname}]`
@@ -103,9 +106,9 @@ Client.on("guildMemberAdd", member => {
    }).catch(console.error)
 })
 /* ...on guildMemberRemove, log event (goodbye) */
-Client.on("guildMemberRemove", member => {
+Zyborg.on("guildMemberRemove", member => {
    /* send message */
-   Client.channels.fetch(CHID_SERVER).then(channel => {
+   Zyborg.channels.fetch(CHID_SERVER).then(channel => {
       let name = member.user.tag
       if(member.nickname)
          name += `[${member.nickname}]`
@@ -115,7 +118,7 @@ Client.on("guildMemberRemove", member => {
    }).catch(console.error)
 })
 /* ...on presenceUpdate, log update appropriately */
-Client.on("presenceUpdate", (old, cur) => {
+Zyborg.on("presenceUpdate", (old, cur) => {
    /* acquire presence data and log with a message */
    let platform = Object.keys(cur.clientStatus)[0] || '*unknown*'
    let action = 'went'
@@ -124,14 +127,14 @@ Client.on("presenceUpdate", (old, cur) => {
    if(cur.status == 'online') action = 'came'
 
    /* send message */
-   Client.channels.fetch(CHID_PRESENCE).then(channel => {
+   Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
       channel.send(
          `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${cur.status} (${platform})`
       ).catch(console.error)
    }).catch(console.error)
 })
 /* ...on voiceStateUpdate, log update appropriately */
-Client.on("voiceStateUpdate", (old, cur) => {
+Zyborg.on("voiceStateUpdate", (old, cur) => {
    /* acquire voice data and log with a message */
    let voice = cur.channelID ? cur.channel.name : old.channel.name
    let action = 'moved to'
@@ -143,7 +146,7 @@ Client.on("voiceStateUpdate", (old, cur) => {
    else if(cur.streaming) action = 'streaming'
 
    /* send message */
-   Client.channels.fetch(CHID_VOICE).then(channel => {
+   Zyborg.channels.fetch(CHID_VOICE).then(channel => {
       channel.send(
          `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${voice}`
       ).catch(console.error)
@@ -152,7 +155,7 @@ Client.on("voiceStateUpdate", (old, cur) => {
    /* MUSIC CHANNEL
     * give instruction on how to use the music bot */
    if(cur.channelID == CHID_MUSIC && !cur.member.user.bot) {
-      Client.channels.fetch(CHID_SPAM).then(channel => {
+      Zyborg.channels.fetch(CHID_SPAM).then(channel => {
          channel.send(
             `<@${cur.id}>, use the following commands in <#${CHID_MUSIC}>:\n` +
             '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\n' +
@@ -190,10 +193,27 @@ Client.on("voiceStateUpdate", (old, cur) => {
    }
 })
 
+
+/********************************/
+/* Begin ZJ_Chillstep events... */
+
+/* ...on disconnect, log event */
+ZJ_Chillstep.on("disconnect", () => {
+   console.log(`${ZJ_Chillstep.user.tag} disconnected...`)
+})
+/* ...on ready, log event and begin clear spam event */
+ZJ_Chillstep.on("ready", () => {
+   console.log(`${ZJ_Chillstep.user.tag} is ready...`)
+})
+
+
 process.once('SIGTERM', () => {
-   console.log("Destroying client before exit...")
-   Client.destroy()
+   console.log("Destroying all Discord BOTS before exit...")
+   Zyborg.destroy()
+   ZJ_Chillstep.destroy()
    process.exit(101)
 })
 
-Client.login(process.env.DISCORD_TOKEN)
+Zyborg.login(process.env.ZYBORG_TOKEN)
+
+ZJ_Chillstep.login(process.env.ZJ_Chillstep_TOKEN)
