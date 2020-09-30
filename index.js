@@ -216,4 +216,4 @@ process.once('SIGTERM', () => {
 
 Zyborg.login(process.env.ZYBORG_TOKEN)
 
-ZJ_Chillstep.login(process.env.ZJ_Chillstep_TOKEN)
+ZJ_Chillstep.login(process.env.ZJ_CHILLSTEP_TOKEN)
