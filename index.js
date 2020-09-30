@@ -15,10 +15,10 @@ const CHID_PRESENCE = '730596136938635334'
 const CHID_VOICE = '720459302963380274'
 const CHID_A2C = '651366291160170516'    //voice
 const CHID_FOCUS = '651374941840867338'  //voice
-const CHID_MUSIC = '725473321868591104'  //voice
 const CHID_ANIME = '730931465793044550'  //voice
+const CHID_CHILLSTEP = '725473321868591104'  //muzix
 const CHIDS_NOINTRO = [
-   CHID_A2C, CHID_FOCUS, CHID_MUSIC, CHID_ANIME,
+   CHID_A2C, CHID_FOCUS, CHID_ANIME, CHID_CHILLSTEP,
 ]
 
 /**************************
@@ -31,10 +31,13 @@ const MINUTES10 = 10 * 60 * 1000
 
 /* required modules */
 const FS = require("fs")
+const YTDL = require("ytdl-core")
 const Path = require("path")
 const Discord = require("discord.js")
 const Zyborg = new Discord.Client()
-const ZJ_Chillstep = new Discord.Client()
+const ZJChillstep = new Discord.Client()
+const ZJChillstep_link = 'https://www.youtube.com/watch?v=bBttNV1qsb8'
+let ZJChillstep_conn = null
 
 /* Voice connection and dispatcher containers */
 let Vconn = null
@@ -152,22 +155,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
       ).catch(console.error)
    }).catch(console.error)
 
-   /* MUSIC CHANNEL
-    * give instruction on how to use the music bot */
-   if(cur.channelID == CHID_MUSIC && !cur.member.user.bot) {
-      Zyborg.channels.fetch(CHID_SPAM).then(channel => {
-         channel.send(
-            `<@${cur.id}>, use the following commands in <#${CHID_MUSIC}>:\n` +
-            '```-play https://soundcloud.com/chrisdigity/sets/2020-candidates\n' +
-            '-play https://soundcloud.com/chrisdigity/sets/gigamix\n' +
-            '-play https://soundcloud.com/chrisdigity/sets/btp\n\nCONTROLS\n' +
-            '-shuffle/-next/-pause/-resume/-stop```'
-         ).then(msg => {
-            msg.delete({ timeout: 60000 })
-         }).catch(console.error)
-      }).catch(console.error)
-   }
-
    /* INTRODUCTION SOUNDS
     * play fun sounds for people entering voice channels
     * - DOES NOT PLAY when moving between voice channels or streaming
@@ -195,25 +182,53 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
 
 /********************************/
-/* Begin ZJ_Chillstep events... */
+/* Begin ZJChillstep events... */
 
 /* ...on disconnect, log event */
-ZJ_Chillstep.on("disconnect", () => {
-   console.log(`${ZJ_Chillstep.user.tag} disconnected...`)
+ZJChillstep.on("disconnect", () => {
+   console.log(`${ZJChillstep.user.tag} disconnected...`)
 })
 /* ...on ready, log event and begin clear spam event */
-ZJ_Chillstep.on("ready", () => {
-   console.log(`${ZJ_Chillstep.user.tag} is ready...`)
+ZJChillstep.on("ready", () => {
+   console.log(`${ZJChillstep.user.tag} is ready...`)
+})
+/* ...on voiceStateUpdate, check appropriate music channel */
+ZJChillstep.on("voiceStateUpdate", (old, cur) => {
+  if(old.channelID != CHID_CHILLSTEP && cur.channelID == CHID_CHILLSTEP) {
+    // user joined Chillstep
+    if(cur.channel.members.array().length == 1) {
+      // start chillstep bot
+      cur.member.voice.channel.join().then(connection => {
+        ZJChillstep_conn = connection
+        connection.play(
+          YTDL(ZJChillstep_link, {quality:'highestaudio'})
+        ).on("error", error => {
+          console.error(`ZJChillstep: ${error}`)
+          Zyborg.channels.fetch(CHID_SPAM).then(channel => {
+            channel.send(`ZJChillstep: error`).catch(console.error)
+          }).catch(console.error)
+        })
+      }).catch(console.error)
+    }
+  } else if(old.channelID == CHID_CHILLSTEP && cur.channelID != CHID_CHILLSTEP) {
+    // user exited Chillstep
+    if(cur.channel.members.array().length == 1) {
+      // remove chillstep bot
+      if(ZJChillstep_conn)
+        ZJChillstep_conn.disconnect()
+        ZJChillstep_conn = null
+    }
+  }
 })
 
 
 process.once('SIGTERM', () => {
    console.log("Destroying all Discord BOTS before exit...")
    Zyborg.destroy()
-   ZJ_Chillstep.destroy()
+   ZJChillstep.destroy()
    process.exit(101)
 })
 
 Zyborg.login(process.env.ZYBORG_TOKEN)
 
-ZJ_Chillstep.login(process.env.ZJ_CHILLSTEP_TOKEN)
+ZJChillstep.login(process.env.ZJCHILLSTEP_TOKEN)
