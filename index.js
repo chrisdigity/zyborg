@@ -203,7 +203,7 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
         ZJChillstep_conn = connection
         connection.play(
           YTDL(ZJChillstep_link, {quality:'highestaudio'}),
-          {volume: 1.0}
+          {volume: 0.1}
         ).on("error", error => {
           console.error(`ZJChillstep: ${error}`)
           Zyborg.channels.fetch(CHID_SPAM).then(channel => {
