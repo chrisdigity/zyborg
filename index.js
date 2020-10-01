@@ -202,11 +202,12 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
       cur.member.voice.channel.join().then(connection => {
         ZJChillstep_conn = connection
         connection.play(
-          YTDL(ZJChillstep_link, {quality:'highestaudio'})
+          YTDL(ZJChillstep_link, {quality:'highestaudio'}),
+          {volume: 0.5}
         ).on("error", error => {
           console.error(`ZJChillstep: ${error}`)
           Zyborg.channels.fetch(CHID_SPAM).then(channel => {
-            channel.send(`ZJChillstep: error`).catch(console.error)
+            channel.send(`ZJChillstep: ${error}`).catch(console.error)
           }).catch(console.error)
         })
       }).catch(console.error)
