@@ -38,6 +38,7 @@ const Zyborg = new Discord.Client()
 const ZJChillstep = new Discord.Client()
 const ZJChillstep_link = 'https://www.youtube.com/watch?v=bBttNV1qsb8'
 let ZJChillstep_conn = null
+let ZJChillstep_count = 0
 
 /* Voice connection and dispatcher containers */
 let Vconn = null
@@ -195,8 +196,8 @@ ZJChillstep.on("ready", () => {
 /* ...on voiceStateUpdate, check appropriate music channel */
 ZJChillstep.on("voiceStateUpdate", (old, cur) => {
   if(old.channelID != CHID_CHILLSTEP && cur.channelID == CHID_CHILLSTEP) {
-    // user joined Chillstep
-    if(cur.channel.members.array().length == 1) {
+    // user joined Chillstep ++increment count
+    if(++ZJChillstep_count == 1) {
       // start chillstep bot
       cur.member.voice.channel.join().then(connection => {
         ZJChillstep_conn = connection
@@ -211,12 +212,16 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
       }).catch(console.error)
     }
   } else if(old.channelID == CHID_CHILLSTEP && cur.channelID != CHID_CHILLSTEP) {
-    // user exited Chillstep
-    if(cur.channel.members.array().length == 1) {
-      // remove chillstep bot
-      if(ZJChillstep_conn)
+    // user exited Chillstep --decrement count
+    if(--ZJChillstep_count < 0)
+      ZJChillstep_count = 0
+    // check for lonely bot
+    if(ZJChillstep_count <= 1) {
+      if(ZJChillstep_conn) {
+        // remove chillstep bot
         ZJChillstep_conn.disconnect()
         ZJChillstep_conn = null
+      }
     }
   }
 })
