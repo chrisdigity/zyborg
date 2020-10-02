@@ -36,7 +36,7 @@ const Path = require("path")
 const Discord = require("discord.js")
 const Zyborg = new Discord.Client()
 const ZJChillstep = new Discord.Client()
-const ZJChillstep_link = 'https://www.youtube.com/watch?v=bBttNV1qsb8'
+const ZJChillstep_link = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
 let ZJChillstep_conn = null
 let ZJChillstep_count = 0
 
