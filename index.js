@@ -53,15 +53,6 @@ let Vconn = null
 let Vqueue = []
 let Vcooldown = {}
 
-/* ALL BOTS shutdown function */
-const SHUTDOWN = function(exitcode) {
-  Zyborg.destroy()
-  ZJChillstep.destroy()
-  ZJNoCopyright.destroy()
-  
-  process.exit(exitcode)
-}
-
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function() {
    Zyborg.channels.fetch(CHID_SPAM).then(channel => {
@@ -131,8 +122,8 @@ Zyborg.on("message", message => {
     return
   
   // check commands
-  if(message.content.toLowerCase() == "!zyborg restart")
-    SHUTDOWN(1)
+  if(message.content.toLowerCase() == "!zyborg clearspam")
+    CLEAR_SPAM()
 })
 /* ...on guildMemberAdd, log event (hello) */
 Zyborg.on("guildMemberAdd", member => {
@@ -245,12 +236,10 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
         ).on("error", error => {
           console.error(`ZJChillstep: ${error}`)
           ZJChillstep.channels.fetch(CHID_SPAM).then(channel => {
-            channel.send(
-              `${error}\n*Attempting auto-fix via REBOOT...*`
-            ).catch(console.error)
+            channel.send(`${error}\n*Please try again later...*`).catch(console.error)
+            connection.disconnect()
+            ZJChillstep_conn = null
           }).catch(console.error)
-          // restart command
-          SHUTDOWN(1)
         })
       }).catch(console.error)
     }
@@ -296,12 +285,10 @@ ZJNoCopyright.on("voiceStateUpdate", (old, cur) => {
         ).on("error", error => {
           console.error(`ZJNoCopyright: ${error}`)
           ZJNoCopyright.channels.fetch(CHID_SPAM).then(channel => {
-            channel.send(
-              `${error}\n*Attempting auto-fix via REBOOT...*`
-            ).catch(console.error)
+            channel.send(`${error}\n*Please try again later...*`).catch(console.error)
+            connection.disconnect()
+            ZJNoCopyright_conn = null
           }).catch(console.error)
-          // restart command
-          SHUTDOWN(1)
         })
       }).catch(console.error)
     }
@@ -322,12 +309,16 @@ ZJNoCopyright.on("voiceStateUpdate", (old, cur) => {
 
 // clean shutdown and restart on SIGTERM
 process.once('SIGTERM', () => {
-   console.log("SIGTERM detected. Restarting...")
-   Zyborg.channels.fetch(CHID_SPAM).then(channel => {
-     channel.send("```SIGTERM detected. Restarting...```").catch(console.error)
-   }).catch(console.error)
-   // restart command
-   SHUTDOWN(101)
+  console.log("SIGTERM detected. Restarting...")
+  Zyborg.channels.fetch(CHID_SPAM).then(channel => {
+    channel.send("```SIGTERM detected. Restarting...```").catch(console.error)
+  }).catch(console.error)
+  // destroy all bots
+  Zyborg.destroy()
+  ZJChillstep.destroy()
+  ZJNoCopyright.destroy()
+  
+  process.exit(101)
 })
 
 // bot logins
