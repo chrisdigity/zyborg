@@ -45,6 +45,14 @@ let Vconn = null
 let Vqueue = []
 let Vcooldown = {}
 
+/* ALL BOTS shutdown function */
+const SHUTDOWN = function(exitcode) {
+  Zyborg.destroy()
+  ZJChillstep.destroy()
+  
+  process.exit(exitcode)
+}
+
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function() {
    Zyborg.channels.fetch(CHID_SPAM).then(channel => {
@@ -88,10 +96,6 @@ const PLAY_NEXT_INTRO = function(connection) {
 /**************************/
 /* Begin ZYBORG events... */
 
-/* ...on disconnect, log event */
-Zyborg.on("disconnect", () => {
-   console.log(`${Zyborg.user.tag} disconnected...`)
-})
 /* ...on ready, log event and begin clear spam event */
 Zyborg.on("ready", () => {
    console.log(`${Zyborg.user.tag} is ready...`)
@@ -185,10 +189,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 /********************************/
 /* Begin ZJChillstep events... */
 
-/* ...on disconnect, log event */
-ZJChillstep.on("disconnect", () => {
-   console.log(`${ZJChillstep.user.tag} disconnected...`)
-})
 /* ...on ready, log event and begin clear spam event */
 ZJChillstep.on("ready", () => {
    console.log(`${ZJChillstep.user.tag} is ready...`)
@@ -207,8 +207,10 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
         ).on("error", error => {
           console.error(`ZJChillstep: ${error}`)
           Zyborg.channels.fetch(CHID_SPAM).then(channel => {
-            channel.send(`ZJChillstep: ${error}`).catch(console.error)
+            channel.send(`ZJChillstep: ${error}\n*Attempting auto-fix via REBOOT...*`).catch(console.error)
           }).catch(console.error)
+          // restart command
+          SHUTDOWN(1)
         })
       }).catch(console.error)
     }
@@ -229,12 +231,14 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
 
 
 process.once('SIGTERM', () => {
-   console.log("Destroying all Discord BOTS before exit...")
-   Zyborg.destroy()
-   ZJChillstep.destroy()
-   process.exit(101)
+   console.log("Bot system restart detected...")
+   Zyborg.channels.fetch(CHID_SPAM).then(channel => {
+     channel.send(`Bot system restart detected...`).catch(console.error)
+   }).catch(console.error)
+   // restart command
+   SHUTDOWN(101)
 })
 
+// bot logins
 Zyborg.login(process.env.ZYBORG_TOKEN)
-
 ZJChillstep.login(process.env.ZJCHILLSTEP_TOKEN)
