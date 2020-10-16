@@ -16,9 +16,11 @@ const CHID_VOICE = '720459302963380274'
 const CHID_A2C = '651366291160170516'    //voice
 const CHID_FOCUS = '651374941840867338'  //voice
 const CHID_ANIME = '730931465793044550'  //voice
-const CHID_CHILLSTEP = '725473321868591104'  //muzix
+const CHID_LINKS = '765706158169391114'        //muzix(text)
+const CHID_CHILLSTEP = '725473321868591104'    //muzix
+const CHID_NOCOPYRIGHT = '766768566263087124'  //muzix
 const CHIDS_NOINTRO = [
-   CHID_A2C, CHID_FOCUS, CHID_ANIME, CHID_CHILLSTEP,
+   CHID_A2C, CHID_FOCUS, CHID_ANIME, CHID_CHILLSTEP, CHID_NOCOPYRIGHT,
 ]
 
 /**************************
@@ -31,14 +33,20 @@ const MINUTES10 = 10 * 60 * 1000
 
 /* required modules */
 const FS = require("fs")
-const YTDL = require("ytdl-core")
 const Path = require("path")
+const YTDL = require("ytdl-core")
 const Discord = require("discord.js")
 const Zyborg = new Discord.Client()
 const ZJChillstep = new Discord.Client()
+const ZJNoCopyright = new Discord.Client()
+
+/* muzix data */
 const ZJChillstep_link = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
+const ZJNoCopyright_link = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 let ZJChillstep_conn = null
+let ZJNoCopyright_conn = null
 let ZJChillstep_count = 0
+let ZJNoCopyright_count = 0
 
 /* Voice connection and dispatcher containers */
 let Vconn = null
@@ -49,6 +57,7 @@ let Vcooldown = {}
 const SHUTDOWN = function(exitcode) {
   Zyborg.destroy()
   ZJChillstep.destroy()
+  ZJNoCopyright.destroy()
   
   process.exit(exitcode)
 }
@@ -98,8 +107,24 @@ const PLAY_NEXT_INTRO = function(connection) {
 
 /* ...on ready, log event and begin clear spam event */
 Zyborg.on("ready", () => {
-   console.log(`${Zyborg.user.tag} is ready...`)
-   CLEAR_SPAM()
+  console.log(`${Zyborg.user.tag} is ready...`)
+  CLEAR_SPAM()
+  
+  // clear livestream links channel and start music bots
+  Zyborg.channels.fetch(CHID_LINKS).then(channel => {
+    channel.messages.fetch().then(messages => {
+      if(messages.array().length > 1) {
+        messages.each(message => {
+          message.delete().then(msg => {
+            console.log(`Deleted ${msg.channel.name} message, ID#${msg.id}...`)
+          }).catch(console.error)
+        })
+      }
+      // start music bots
+      ZJChillstep.login(process.env.ZJCHILLSTEP_TOKEN)
+      ZJNoCopyright.login(process.env.ZJNOCOPYRIGHT_TOKEN)
+    }).catch(console.error)
+  }).catch(console.error)
 })
 /* ...on guildMemberAdd, log event (hello) */
 Zyborg.on("guildMemberAdd", member => {
@@ -189,9 +214,14 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 /********************************/
 /* Begin ZJChillstep events... */
 
-/* ...on ready, log event and begin clear spam event */
+/* ...on ready, log event and post livestream link */
 ZJChillstep.on("ready", () => {
-   console.log(`${ZJChillstep.user.tag} is ready...`)
+  console.log(`${ZJChillstep.user.tag} is ready...`)
+  ZJChillstep.channels.fetch(CHID_LINKS).then(channel => {
+    channel.send(
+      `Streaming Chillstep live on <#${CHID_CHILLSTEP}>\n${ZJChillstep_link}`
+    ).catch(console.error)
+  }).catch(console.error)
 })
 /* ...on voiceStateUpdate, check appropriate music channel */
 ZJChillstep.on("voiceStateUpdate", (old, cur) => {
@@ -206,8 +236,10 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
           {volume: 0.25}
         ).on("error", error => {
           console.error(`ZJChillstep: ${error}`)
-          Zyborg.channels.fetch(CHID_SPAM).then(channel => {
-            channel.send(`ZJChillstep: ${error}\n*Attempting auto-fix via REBOOT...*`).catch(console.error)
+          ZJChillstep.channels.fetch(CHID_SPAM).then(channel => {
+            channel.send(
+              `${error}\n*Attempting auto-fix via REBOOT...*`
+            ).catch(console.error)
           }).catch(console.error)
           // restart command
           SHUTDOWN(1)
@@ -230,10 +262,61 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
 })
 
 
+/********************************/
+/* Begin ZJNoCopyright events... */
+
+/* ...on ready, log event and post livestream link */
+ZJNoCopyright.on("ready", () => {
+  console.log(`${ZJNoCopyright.user.tag} is ready...`)
+  ZJNoCopyright.channels.fetch(CHID_LINKS).then(channel => {
+    channel.send(
+      `Streaming NoCopyrightMusic live on <#${CHID_NOCOPYRIGHT}>\n${ZJNoCopyright_link}`
+    ).catch(console.error)
+  }).catch(console.error)
+})
+/* ...on voiceStateUpdate, check appropriate music channel */
+ZJNoCopyright.on("voiceStateUpdate", (old, cur) => {
+  if(old.channelID != CHID_NOCOPYRIGHT && cur.channelID == CHID_NOCOPYRIGHT) {
+    // user joined Chillstep ++increment count
+    if(++ZJNoCopyright_count == 1) {
+      // start chillstep bot
+      cur.member.voice.channel.join().then(connection => {
+        ZJNoCopyright_conn = connection
+        connection.play(
+          YTDL(ZJNoCopyright_link, {quality:'highestaudio'}),
+          {volume: 0.25}
+        ).on("error", error => {
+          console.error(`ZJNoCopyright: ${error}`)
+          ZJNoCopyright.channels.fetch(CHID_SPAM).then(channel => {
+            channel.send(
+              `${error}\n*Attempting auto-fix via REBOOT...*`
+            ).catch(console.error)
+          }).catch(console.error)
+          // restart command
+          SHUTDOWN(1)
+        })
+      }).catch(console.error)
+    }
+  } else if(old.channelID == CHID_NOCOPYRIGHT && cur.channelID != CHID_NOCOPYRIGHT) {
+    // user exited Chillstep --decrement count
+    if(--ZJNoCopyright_count < 0)
+      ZJNoCopyright_count = 0
+    // check for lonely bot
+    if(ZJNoCopyright_count <= 1) {
+      if(ZJNoCopyright_conn) {
+        // remove chillstep bot
+        ZJNoCopyright_conn.disconnect()
+        ZJNoCopyright_conn = null
+      }
+    }
+  }
+})
+
+// clean shutdown and restart on SIGTERM
 process.once('SIGTERM', () => {
-   console.log("Bot system restart detected...")
+   console.log("SIGTERM detected. Restarting...")
    Zyborg.channels.fetch(CHID_SPAM).then(channel => {
-     channel.send(`Bot system restart detected...`).catch(console.error)
+     channel.send("```SIGTERM detected. Restarting...```").catch(console.error)
    }).catch(console.error)
    // restart command
    SHUTDOWN(101)
@@ -241,4 +324,3 @@ process.once('SIGTERM', () => {
 
 // bot logins
 Zyborg.login(process.env.ZYBORG_TOKEN)
-ZJChillstep.login(process.env.ZJCHILLSTEP_TOKEN)
