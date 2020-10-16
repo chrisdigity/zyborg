@@ -113,7 +113,7 @@ Zyborg.on("ready", () => {
   // clear livestream links channel and start music bots
   Zyborg.channels.fetch(CHID_LINKS).then(channel => {
     channel.messages.fetch().then(messages => {
-      if(messages.array().length > 1) {
+      if(messages.array().length) {
         messages.each(message => {
           message.delete().then(msg => {
             console.log(`Deleted ${msg.channel.name} message, ID#${msg.id}...`)
