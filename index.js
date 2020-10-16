@@ -126,6 +126,14 @@ Zyborg.on("ready", () => {
     }).catch(console.error)
   }).catch(console.error)
 })
+Zyborg.on("message", message => {
+  if(message.channel.id != CHID_SPAM || !message.member.hasPermission('ADMINISTRATOR'))
+    return
+  
+  // check commands
+  if(message.content.toLowerCase() == "!zyborg restart")
+    SHUTDOWN(1)
+})
 /* ...on guildMemberAdd, log event (hello) */
 Zyborg.on("guildMemberAdd", member => {
    /* send message */
