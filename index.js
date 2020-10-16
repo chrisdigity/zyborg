@@ -29,6 +29,7 @@ const CHIDS_NOINTRO = [
 
 
 /* CONSTANTS */
+const YT_VOLUME = 0.2
 const MINUTES10 = 10 * 60 * 1000
 
 /* required modules */
@@ -232,7 +233,7 @@ ZJChillstep.on("voiceStateUpdate", (old, cur) => {
         ZJChillstep_conn = connection
         connection.play(
           YTDL(ZJChillstep_link, {quality:'highestaudio'}),
-          {volume: 0.25}
+          {volume: YT_VOLUME}
         ).on("error", error => {
           console.error(`ZJChillstep: ${error}`)
           ZJChillstep.channels.fetch(CHID_SPAM).then(channel => {
@@ -281,7 +282,7 @@ ZJNoCopyright.on("voiceStateUpdate", (old, cur) => {
         ZJNoCopyright_conn = connection
         connection.play(
           YTDL(ZJNoCopyright_link, {quality:'highestaudio'}),
-          {volume: 0.25}
+          {volume: YT_VOLUME}
         ).on("error", error => {
           console.error(`ZJNoCopyright: ${error}`)
           ZJNoCopyright.channels.fetch(CHID_SPAM).then(channel => {
