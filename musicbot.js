@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 
 const ytdl = require("ytdl-core")
-const Discord = require("discord")
+const Discord = require("discord.js")
 
 const VOLUME = 0.2
 
