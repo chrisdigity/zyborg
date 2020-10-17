@@ -241,7 +241,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
      let voiceChannel = cur.member.voice.channel
      voiceChannel.join().then(connection => {
         //create tts stream
-        const stream = DiscordTTS.getVoiceStream(`${cur.member.nickname || cur.member.user.username} ${action} the chat.`)
+        let name = `${cur.member.nickname || cur.member.user.username}`
+        const stream = DiscordTTS.getVoiceStream(`The ${name.split(':')[0]} ${action} the chat.`)
        //play stream and leave
        const dispatcher = connection.play(stream);
        dispatcher.on("finish",()=>voiceChannel.leave())
