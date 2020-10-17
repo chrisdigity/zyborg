@@ -35,11 +35,11 @@ const CHIDS_NOINTRO = [
 const FS = require("fs")
 const Path = require("path")
 const Discord = require("discord.js")
-const Musicbot = require("./musicbot.js")
+const BOTS = require("./mybots.js")
 const Zyborg = new Discord.Client()
-const ZJ_Chillstep = new Musicbot('ZJChillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
-const ZJ_NCM = new Musicbot('ZJNoCopyrightMusic', CHID_NCM, LINK_NCM)
-const ZJ_NCS = new Musicbot('ZJNoCopyrightSounds', CHID_NCS, LINK_NCS)
+const ZJ_Chillstep = new BOTS.Music('ZJChillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
+const ZJ_NCM = new BOTS.Music('ZJNoCopyrightMusic', CHID_NCM, LINK_NCM)
+const ZJ_NCS = new BOTS.Music('ZJNoCopyrightSounds', CHID_NCS, LINK_NCS)
 
 /* Voice connection and dispatcher containers */
 let Vconn = null

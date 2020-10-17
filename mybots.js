@@ -6,7 +6,7 @@ const Discord = require("discord.js")
 
 const VOLUME = 0.2
 
-exports.module = function(n, id, src) {
+const Music = function(n, id, src) {
   // make 'this' reliably accessible
   const _self = this
   
@@ -67,4 +67,8 @@ exports.module = function(n, id, src) {
   _self.login = function(token) {
     _self.client.login(token)
   }
+}
+
+exports.module = {
+  Music,
 }
