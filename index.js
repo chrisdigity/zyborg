@@ -200,7 +200,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   
    /* acquire voice data and action */
    let voice = state.channel.name
-   let voiceChannel = state.member.voice.channel
+   let voiceChannel = state.channel
    let members = state.channel.members
    let action = 'moved to'
 
