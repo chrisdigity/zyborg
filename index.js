@@ -239,14 +239,15 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     * - DOES NOT PLAY if there is only one (1) other person in the channel
     * - DOES NOT PLAY if user ID is still in cooldown
     * - DOES NOT PLAY if no sound file exists for user ID */
-   if(action == 'joined' && cur.channel.members.array().length > 1 &&
+   if(cur.member.id != Zyborg.id && action == 'joined' &&
+      cur.channel.members.array().length > 1 &&
       !CHIDS_NOINTRO.includes(cur.channelID)) {
      //join the channel
      let voiceChannel = cur.member.voice.channel
      voiceChannel.join().then(connection => {
         //create tts stream
         let name = `${cur.member.nickname || cur.member.user.username}`
-        console.log(name, name.replace(EMOJI_FILTER,''), name.replace(EMOJI_FILTER,' '))
+        console.log(name, name.replace(EMOJI_FILTER,''))
         const stream = DiscordTTS.getVoiceStream(`The ${name.replace(EMOJI_FILTER, '')} ${action} the chat.`)
        //play stream and leave
        //const dispatcher = connection.play(stream);
