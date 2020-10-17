@@ -224,7 +224,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    /* send message */
    Zyborg.channels.fetch(CHID_VOICE).then(channel => {
       channel.send(
-         `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${voice}`
+         `${cur.member.nickname || cur.member.user.tag} ${action} ${voice}`
       ).catch(console.error)
    }).catch(console.error)
 
