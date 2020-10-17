@@ -36,6 +36,7 @@ const FS = require("fs")
 const Path = require("path")
 const YTDL = require("ytdl-core")
 const Discord = require("discord.js")
+const DiscordTTS = require("discord-tts")
 
 /* YTMusic constructor */
 const VOLUME = 0.2
@@ -164,7 +165,6 @@ Zyborg.on("ready", () => {
 Zyborg.on("message", message => {
   if(message.channel.id != CHID_SPAM || !message.member.hasPermission('ADMINISTRATOR'))
     return
-  
   // check commands
   if(message.content.toLowerCase() == "!zyborg clearspam")
     CLEAR_SPAM()
@@ -234,23 +234,19 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     * - DOES NOT PLAY in CHIDS_NOINTRO channels
     * - DOES NOT PLAY if there is only one (1) other person in the channel
     * - DOES NOT PLAY if user ID is still in cooldown
-    * - DOES NOT PLAY if no sound file exists for user ID 
-   if(action == 'left') {
-      Vcooldown[cur.id] = Date.now()
-   } else if(action == 'joined' &&
-             !CHIDS_NOINTRO.includes(cur.channelID) &&
-             cur.channel.members.array().length > 2 &&
-             !Vcooldown.hasOwnProperty(cur.id)) {
-      /* check file exists *
-      let mp3file = Path.join(__dirname, `./sound/${cur.id}.mp3`)
-      if(FS.existsSync(mp3file)){
-         /* queue intro sound *
-         Vqueue.push(mp3file)
-         /* join channel and/or play intro *
-         if(!Vconn)
-            cur.member.voice.channel.join().then(PLAY_NEXT_INTRO).catch(console.error)
-      }
-   }*/
+    * - DOES NOT PLAY if no sound file exists for user ID */
+   if(action == 'joined' && cur.channel.members.array().length > 1 &&
+      !CHIDS_NOINTRO.includes(cur.channelID)) {
+     //join the channel
+     let voiceChannel = cur.member.voice.channel
+     voiceChannel.join().then(connection => {
+        //create tts stream
+        const stream = DiscordTTS.getVoiceStream(`**${cur.member.nickname || cur.member.user.username}** __*${action}*__ the chat.`)
+       //play stream and leave
+       const dispatcher = connection.play(stream);
+       dispatcher.on("finish",()=>voiceChannel.leave())
+     }).catch(console.error)
+   }
 })
 
 
