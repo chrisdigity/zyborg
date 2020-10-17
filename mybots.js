@@ -6,7 +6,7 @@ const Discord = require("discord.js")
 
 const VOLUME = 0.2
 
-const Music = function(n, id, src) {
+const YTMusic = function(n, id, src) {
   // make 'this' reliably accessible
   const _self = this
   
@@ -70,5 +70,5 @@ const Music = function(n, id, src) {
 }
 
 exports.module = {
-  Music,
+  YTMusic,
 }
