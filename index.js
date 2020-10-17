@@ -246,10 +246,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
      voiceChannel.join().then(connection => {
         //create tts stream
         let name = `${cur.member.nickname || cur.member.user.username}`
+        console.log(name, name.replace(EMOJI_FILTER,''), name.replace(EMOJI_FILTER,' '))
         const stream = DiscordTTS.getVoiceStream(`The ${name.replace(EMOJI_FILTER, '')} ${action} the chat.`)
        //play stream and leave
-       const dispatcher = connection.play(stream);
-       dispatcher.on("finish",()=>voiceChannel.leave())
+       //const dispatcher = connection.play(stream);
+       //dispatcher.on("finish",()=>voiceChannel.leave())
+        voiceChannel.leave()
      }).catch(console.error)
    }
 })
