@@ -222,8 +222,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    /* conditional data */
    if(old.channelID == null) action = 'joined'
    else if(cur.channelID == null) action = 'left'
-   else if(old.streaming) action = 'regress'
-   else if(cur.streaming) action = 'streaming'
+   else if(old.streaming) action = 'regressed'
+   else if(cur.streaming) action = 'is streaming in'
 
    /* send message */
    Zyborg.channels.fetch(CHID_VOICE).then(channel => {
@@ -239,20 +239,22 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     * - DOES NOT PLAY if there is only one (1) other person in the channel
     * - DOES NOT PLAY if user ID is still in cooldown
     * - DOES NOT PLAY if no sound file exists for user ID */
-   if(cur.member.id != Zyborg.id && action == 'joined' &&
+   if(cur.member.id != Zyborg.user.id &&
       cur.channel.members.array().length > 1 &&
       !CHIDS_NOINTRO.includes(cur.channelID)) {
+     //select the appropriate channel
+     let voiceChannel = old.member.voice.channel
+     if(action == 'joined' || action =='left')
+       voiceChannel = cur.member.voice.channel
      //join the channel
-     let voiceChannel = cur.member.voice.channel
      voiceChannel.join().then(connection => {
         //create tts stream
         let name = `${cur.member.nickname || cur.member.user.username}`
-        console.log(name, name.replace(EMOJI_FILTER,''))
-        const stream = DiscordTTS.getVoiceStream(`The ${name.replace(EMOJI_FILTER, '')} ${action} the chat.`)
+        console.log('tts: name')
+        const stream = DiscordTTS.getVoiceStream(`The ${name} ${action} the channel.`)
        //play stream and leave
-       //const dispatcher = connection.play(stream);
-       //dispatcher.on("finish",()=>voiceChannel.leave())
-        voiceChannel.leave()
+       const dispatcher = connection.play(stream);
+       dispatcher.on("finish",()=>voiceChannel.leave())
      }).catch(console.error)
    }
 })
