@@ -224,7 +224,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    /* send message */
    Zyborg.channels.fetch(CHID_VOICE).then(channel => {
       channel.send(
-         `${cur.member.nickname || cur.member.user.tag} ${action} ${voice}`
+         `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${voice}`
       ).catch(console.error)
    }).catch(console.error)
 
@@ -241,7 +241,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
      let voiceChannel = cur.member.voice.channel
      voiceChannel.join().then(connection => {
         //create tts stream
-        const stream = DiscordTTS.getVoiceStream(`**${cur.member.nickname || cur.member.user.username}** __*${action}*__ the chat.`)
+        const stream = DiscordTTS.getVoiceStream(`${cur.member.nickname || cur.member.user.username} ${action} the chat.`)
        //play stream and leave
        const dispatcher = connection.play(stream);
        dispatcher.on("finish",()=>voiceChannel.leave())
