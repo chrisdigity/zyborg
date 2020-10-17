@@ -8,6 +8,10 @@ require("dotenv").config()
  * USER CONFIGURATION *
  **********************/
 
+/* CONSTANTS */
+const EMOJI_FILTER = new RegExp(
+  '\ud83c[\udf00-\udfff]|\ud83d[\udc00-\ude4f]|\ud83d[\ude80-\udeff]', 'g')
+
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
 const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
@@ -242,7 +246,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
      voiceChannel.join().then(connection => {
         //create tts stream
         let name = `${cur.member.nickname || cur.member.user.username}`
-        const stream = DiscordTTS.getVoiceStream(`The ${name.split(':')[0]} ${action} the chat.`)
+        const stream = DiscordTTS.getVoiceStream(`The ${name.replace(EMOJI_FILTER, '')} ${action} the chat.`)
        //play stream and leave
        const dispatcher = connection.play(stream);
        dispatcher.on("finish",()=>voiceChannel.leave())
