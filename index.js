@@ -193,14 +193,15 @@ Zyborg.on("presenceUpdate", (old, cur) => {
 /* ...on voiceStateUpdate, log update appropriately */
 Zyborg.on("voiceStateUpdate", (old, cur) => {
   //ignore bot movements
-  let member = (cur.channelID ? cur : old).member
+  let state = cur.channelID ? cur : old
+  let member = state.member
   if(member.id == Zyborg.user.id)
-    return
+    return;
   
    /* acquire voice data and action */
-   let voice = (cur.channelID ? cur : old).channel.name
-   let voiceChannel = (cur.channelID ? cur : old).member.voice.channel
-   let members = (cur.channelID ? cur : old).channel.members
+   let voice = state.channel.name
+   let voiceChannel = state.member.voice.channel
+   let members = state.channel.members
    let action = 'moved to'
 
    /* conditional data */
