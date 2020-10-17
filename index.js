@@ -230,10 +230,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
         //create tts stream
         let name = `${member.nickname || member.user.username}`
         action = (action == 'streaming') ? 'is now streaming in' : action
-        const stream = DiscordTTS.getVoiceStream(
-          `The ${name} ${action} the channel.`,
-          'en-AU'
-        )
+        const stream = DiscordTTS.getVoiceStream(`The ${name} ${action} the channel.`, 'en-US')
        //play stream and leave
        const dispatcher = connection.play(stream);
        dispatcher.on("finish",()=>voiceChannel.leave())
