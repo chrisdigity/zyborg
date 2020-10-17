@@ -69,6 +69,6 @@ const YTMusic = function(n, id, src) {
   }
 }
 
-exports.module = {
+module.exports = {
   YTMusic,
 }
