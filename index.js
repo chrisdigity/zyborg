@@ -209,7 +209,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    else if(cur.channelID == null) action = 'left'
    else if(old.streaming) action = 'regressed'
    else if(cur.streaming) action = 'streaming'
-  console.log(member.id, voice, voiceChannel, members, action)
 
    /* send message */
    Zyborg.channels.fetch(CHID_VOICE).then(channel => {
