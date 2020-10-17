@@ -9,8 +9,7 @@ require("dotenv").config()
  **********************/
 
 /* CONSTANTS */
-const EMOJI_FILTER = new RegExp(
-  '\ud83c[\udf00-\udfff]|\ud83d[\udc00-\ude4f]|\ud83d[\ude80-\udeff]', 'g')
+const VOLUME = 0.2
 
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
@@ -36,14 +35,11 @@ const CHIDS_NOINTRO = [
  **************************/
 
 /* required modules */
-const FS = require("fs")
-const Path = require("path")
 const YTDL = require("ytdl-core")
 const Discord = require("discord.js")
 const DiscordTTS = require("discord-tts")
 
 /* YTMusic constructor */
-const VOLUME = 0.2
 const YTMusic = function(n, id, src) {
   // make 'this' reliably accessible
   const _self = this
@@ -107,11 +103,6 @@ const YTMusic = function(n, id, src) {
   }
 }
 
-/* Voice connection and dispatcher containers */
-let Vconn = null
-let Vqueue = []
-let Vcooldown = {}
-
 /* Initialize discord bots */
 const Zyborg = new Discord.Client()
 const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
@@ -141,20 +132,6 @@ const CLEAR_SPAM = function() {
 
    /* repeat clear event in ~24 hours *
    setTimeout(CLEAR_SPAM, 86400000) */
-}
-
-/* function to play intro sound */
-const PLAY_NEXT_INTRO = function(connection) {
-   /* store voice connection */
-   if(!Vconn) Vconn = connection
-   /* play next mp3 file */
-   Vconn.play(Vqueue.shift()).on('finish', () => {
-      if(Vqueue.length) PLAY_NEXT_INTRO()
-      else {
-         Vconn.disconnect()
-         Vconn = null
-      }
-   })
 }
 
 
@@ -215,20 +192,27 @@ Zyborg.on("presenceUpdate", (old, cur) => {
 })
 /* ...on voiceStateUpdate, log update appropriately */
 Zyborg.on("voiceStateUpdate", (old, cur) => {
-   /* acquire voice data and log with a message */
-   let voice = cur.channelID ? cur.channel.name : old.channel.name
+  //ignore bot movements
+  let member = (cur.channelID ? cur : old).member
+  if(member.id == Zyborg.user.id)
+    return
+  
+   /* acquire voice data and action */
+   let voice = (cur.channelID ? cur : old).channel.name
+   let voiceChannel = (cur.channelID ? cur : old).member.voice.channel
+   let members = (cur.channelID ? cur : old).channel.members
    let action = 'moved to'
 
    /* conditional data */
    if(old.channelID == null) action = 'joined'
    else if(cur.channelID == null) action = 'left'
    else if(old.streaming) action = 'regressed'
-   else if(cur.streaming) action = 'is streaming in'
+   else if(cur.streaming) action = 'streaming'
 
    /* send message */
    Zyborg.channels.fetch(CHID_VOICE).then(channel => {
       channel.send(
-         `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${voice}`
+         `**${member.nickname || member.user.tag}** __*${action}*__ ${voice}`
       ).catch(console.error)
    }).catch(console.error)
 
@@ -239,18 +223,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     * - DOES NOT PLAY if there is only one (1) other person in the channel
     * - DOES NOT PLAY if user ID is still in cooldown
     * - DOES NOT PLAY if no sound file exists for user ID */
-   if(cur.member.id != Zyborg.user.id &&
-      cur.channel.members.array().length > 1 &&
-      !CHIDS_NOINTRO.includes(cur.channelID)) {
-     //select the appropriate channel
-     let voiceChannel = old.member.voice.channel
-     if(action == 'joined' || action =='left')
-       voiceChannel = cur.member.voice.channel
+   if(members.array().length > 1 && !CHIDS_NOINTRO.includes(cur.channelID)) {
      //join the channel
      voiceChannel.join().then(connection => {
         //create tts stream
-        let name = `${cur.member.nickname || cur.member.user.username}`
-        console.log('tts: name')
+        let name = `${member.nickname || member.user.username}`
+        action = (action == 'streaming') ? 'is now streaming in' : action
         const stream = DiscordTTS.getVoiceStream(`The ${name} ${action} the channel.`)
        //play stream and leave
        const dispatcher = connection.play(stream);
