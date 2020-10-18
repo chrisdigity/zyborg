@@ -9,7 +9,7 @@ require("dotenv").config()
  **********************/
 
 /* CONSTANTS */
-const VOLUME = 0.2
+const VOLUME = 0.1
 
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
