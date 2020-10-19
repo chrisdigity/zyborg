@@ -266,6 +266,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let name = `${member.nickname || member.user.username}`
+  if(action == 'streaming') console.log(member.presence.activities)
   if(action == 'streaming' && member.presence.activities.length)
     action = `started streaming ${member.presence.activities[0].name} in`
   
