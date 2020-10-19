@@ -4,6 +4,11 @@
 /* sensitive data */
 require("dotenv").config()
 
+/* vars */
+let Vcurr = 0
+let Vqueue = []
+let Vconnection = null
+
 /**********************
  * USER CONFIGURATION *
  **********************/
@@ -21,23 +26,17 @@ const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
 const CHID_PRESENCE = '730596136938635334'
 const CHID_VOICE = '720459302963380274'
-const CHID_STORY = '651366291160170516' //voice
 const CHID_ANIME = '730931465793044550' //voice
 const CHID_CHILLSTEP = '725473321868591104' //muzix
 const CHID_NCM = '766768566263087124' //muzix
 const CHID_NCS = '766835115564859403' //muzix
 const CHIDS_NOINTRO = [
-   CHID_STORY, CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS,
+   CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS,
 ]
 
 /**************************
  * END USER CONFIGURATION *
  **************************/
-
-/* required modules */
-const YTDL = require("ytdl-core")
-const Discord = require("discord.js")
-const DiscordTTS = require("discord-tts")
 
 /* YTMusic constructor */
 const YTMusic = function(n, id, src) {
@@ -103,15 +102,9 @@ const YTMusic = function(n, id, src) {
   }
 }
 
-/* Initialize discord bots */
-const Zyborg = new Discord.Client()
-const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
-const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
-const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
-
 /* ZYBORG function to clear spam channel every ~24 hours */
-const CLEAR_SPAM = function() {
-   Zyborg.channels.fetch(CHID_SPAM).then(channel => {
+const CLEAR_SPAM = function(BOT) {
+   BOT.channels.fetch(CHID_SPAM).then(channel => {
       /* featch messages from channel */
       channel.messages.fetch().then(messages => {
          /* if more than 1 message ... */
@@ -134,6 +127,59 @@ const CLEAR_SPAM = function() {
    setTimeout(CLEAR_SPAM, 86400000) */
 }
 
+/* Zyborg function to play alert */
+const PLAY_ALERT = function(alert) {
+  ++Vcurr
+  Vconnection.play(
+    DiscordTTS.getVoiceStream(alert.speak, 'en-AU')
+  ).on("finish",() => {
+    if(--Vcurr == 0) {
+      Vconnection.disconnect()
+      Vconnection = null
+      CHECK_ALERT()
+    }
+  })
+}
+
+/* Zyborg function to check/play next alert */
+const CHECK_ALERT = function() {
+  if(Vqueue.length) {
+    let alert = Vqueue.shift()
+    /* check alert eligibility
+     * - must have at least one existing member in the channel
+     * - channel MUST NOT be on exclusion list */
+    if(alert.channel.members.array().length > 1 &&
+       !CHIDS_NOINTRO.includes(alert.channel.id)) {
+      alert.channel.join().then(connection => {
+        Vconnection = connection
+        PLAY_ALERT(alert)
+      }).catch(console.error)
+    }
+  }
+}
+
+/* Zyborg function to queue next alert */
+const QUEUE_ALERT = function(alert) {
+  // play sound immediately if same channel
+  if(Vconnection && Vconnection.channel.id == alert.channel.id)
+    PLAY_ALERT(alert)
+  else Vqueue.push(alert)
+  // chceck alerts if no voice connection
+  if(Vconnection == null)
+    CHECK_ALERT()
+}
+
+/* required modules */
+const YTDL = require("ytdl-core")
+const Discord = require("discord.js")
+const DiscordTTS = require("discord-tts")
+
+/* Initialize discord bots */
+const Zyborg = new Discord.Client()
+const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
+const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
+const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
+
 
 /**************************/
 /* Begin ZYBORG events... */
@@ -141,14 +187,14 @@ const CLEAR_SPAM = function() {
 /* ...on ready, log event and begin clear spam event */
 Zyborg.on("ready", () => {
   console.log(`${Zyborg.user.tag} is ready...`)
-  CLEAR_SPAM()
+  CLEAR_SPAM(Zyborg)
 })
 Zyborg.on("message", message => {
   if(message.channel.id != CHID_SPAM || !message.member.hasPermission('ADMINISTRATOR'))
     return
   // check commands
   if(message.content.toLowerCase() == "!zyborg clearspam")
-    CLEAR_SPAM()
+    CLEAR_SPAM(Zyborg)
 })
 /* ...on guildMemberAdd, log event (hello) */
 Zyborg.on("guildMemberAdd", member => {
@@ -201,7 +247,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    /* acquire voice data and action */
    let voice = state.channel.name
    let voiceChannel = state.channel
-   let members = state.channel.members
    let action = 'moved to'
 
    /* conditional data */
@@ -209,6 +254,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    else if(cur.channelID == null) action = 'left'
    else if(old.streaming) action = 'regressed'
    else if(cur.streaming) action = 'streaming'
+   else if(old.channelID == cur.channelID)
+     return;  //ignore all other 'same channel' actions
 
    /* send message */
    Zyborg.channels.fetch(CHID_VOICE).then(channel => {
@@ -217,25 +264,11 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
       ).catch(console.error)
    }).catch(console.error)
 
-   /* INTRODUCTION SOUNDS
-    * play fun sounds for people entering voice channels
-    * - DOES NOT PLAY when moving between voice channels or streaming
-    * - DOES NOT PLAY in CHIDS_NOINTRO channels
-    * - DOES NOT PLAY if there is only one (1) other person in the channel
-    * - DOES NOT PLAY if user ID is still in cooldown
-    * - DOES NOT PLAY if no sound file exists for user ID */
-   if(members.array().length > 1 && !CHIDS_NOINTRO.includes(cur.channelID)) {
-     //join the channel
-     voiceChannel.join().then(connection => {
-        //create tts stream
-        let name = `${member.nickname || member.user.username}`
-        action = (action == 'streaming') ? 'is now streaming in' : action
-        const stream = DiscordTTS.getVoiceStream(`The ${name} ${action} the channel.`, 'en-US')
-       //play stream and leave
-       const dispatcher = connection.play(stream);
-       dispatcher.on("finish",()=>voiceChannel.leave())
-     }).catch(console.error)
-   }
+  //queue extra action advise
+  let name = `${member.nickname || member.user.username}`
+  if(action == 'moved to')
+    QUEUE_ALERT({"channel": old.channel, "speak": `${name} moved away from the chat.`})
+  QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} ${action} the chat.`})
 })
 
 
