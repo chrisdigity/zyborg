@@ -148,7 +148,7 @@ const CHECK_ALERT = function() {
     /* check alert eligibility
      * - must have at least one existing member in the channel
      * - channel MUST NOT be on exclusion list */
-    if(alert.channel.members.array().length > 1 &&
+    if(alert.channel.members.array().length > 0 &&
        !CHIDS_NOINTRO.includes(alert.channel.id)) {
       alert.channel.join().then(connection => {
         Vconnection = connection
