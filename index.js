@@ -5,7 +5,7 @@
 require("dotenv").config()
 
 /* vars */
-let Vcurr = 0
+//let Vcurr = 0
 let Vqueue = []
 let Vconnection = null
 
@@ -129,15 +129,15 @@ const CLEAR_SPAM = function(BOT) {
 
 /* Zyborg function to play alert */
 const PLAY_ALERT = function(alert) {
-  ++Vcurr
+  //++Vcurr
   Vconnection.play(
     DiscordTTS.getVoiceStream(alert.speak, 'en-AU')
   ).on("finish",() => {
-    if(--Vcurr == 0) {
+    //if(--Vcurr == 0) {
       Vconnection.disconnect()
       Vconnection = null
       CHECK_ALERT()
-    }
+    //}
   })
 }
 
