@@ -266,6 +266,9 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let name = `${member.nickname || member.user.username}`
+  if(action == 'streaming' && member.presence.activities.length)
+    action = `started streaming ${member.presence.activities[0].name} in`
+  
   if(action == 'moved to')
     QUEUE_ALERT({"channel": old.channel, "speak": `${name} moved away from the chat.`})
   QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} ${action} the chat.`})
