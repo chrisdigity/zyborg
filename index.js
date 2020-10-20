@@ -252,8 +252,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    /* conditional data */
    if(old.channelID == null) action = 'joined'
    else if(cur.channelID == null) action = 'left'
-   else if(old.streaming) action = 'regressed'
-   else if(cur.streaming) action = 'streaming'
+   else if(old.streaming && !cur.streaming) action = 'regressed'
+   else if(cur.streaming && !old.streaming) action = 'streaming'
    else if(old.channelID == cur.channelID)
      return;  //ignore all other 'same channel' actions
 
@@ -272,10 +272,10 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     let activity = ''
     if(member.presence.activities) {
       let num_activities = member.presence.activities.length
-      activity = member.presence.activities[num_activities].name
+      if(num_activities)
+        activity = member.presence.activities[num_activities].name
     }
-    if(activity.toLowerCase() == 'custom status')
-      activity = ''
+    if(activity.toLowerCase() == 'custom status') activity = ''
     QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} started streaming ${activity}.`})
   }
   else if(action == 'regressed')
