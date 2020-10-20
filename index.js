@@ -266,6 +266,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let name = `${member.nickname || member.user.username}`
+  if(action == 'moved to')
+    QUEUE_ALERT({"channel": old.channel, "speak": `${name} moved away from the chat.`})
   if(action == 'streaming') {
     let num_activities = member.presence.activities.length
     let activity = ''
@@ -273,12 +275,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
       activity = member.presence.activities[num_activities].name
     if(activity.toLowerCase() == 'custom status')
       activity = ''
-    action = `started streaming ${activity} in`
+    QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} started streaming ${activity}.`})
   }
-  
-  if(action == 'moved to')
-    QUEUE_ALERT({"channel": old.channel, "speak": `${name} moved away from the chat.`})
-  QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} ${action} the chat.`})
+  else if(action == 'regressed')
+    QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} stopped streaming.`})
+  else
+    QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} ${action} the chat.`})
 })
 
 
