@@ -269,10 +269,11 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   if(action == 'moved to')
     QUEUE_ALERT({"channel": old.channel, "speak": `${name} moved away from the chat.`})
   if(action == 'streaming') {
-    let num_activities = member.presence.activities.length
     let activity = ''
-    if(num_activities)
+    if(member.presence.activities) {
+      let num_activities = member.presence.activities.length
       activity = member.presence.activities[num_activities].name
+    }
     if(activity.toLowerCase() == 'custom status')
       activity = ''
     QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} started streaming ${activity}.`})
