@@ -272,10 +272,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     let activity = ''
     if(member.presence.activities) {
       let num_activities = member.presence.activities.length
-      if(num_activities) {
-        console.log(member.presence.activities)
-        activity = member.presence.activities[num_activities].name
-      }
+      if(num_activities)
+        activity = member.presence.activities[num_activities - 1].name
     }
     if(activity.toLowerCase() == 'custom status') activity = ''
     QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} started streaming ${activity}.`})
