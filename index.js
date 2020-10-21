@@ -153,7 +153,8 @@ const CHECK_ALERT = function() {
       alert.channel.join().then(connection => {
         Vconnection = connection
         PLAY_ALERT(alert)
-      }).catch(console.error).finally(() => {
+      }).catch(err => {
+        console.error(err)
         if(Vconnection)
           Vconnection.disconnect()
         else console.log('NO VOICE CONNECTION TO DISCONNECT')
