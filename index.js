@@ -153,7 +153,11 @@ const CHECK_ALERT = function() {
       alert.channel.join().then(connection => {
         Vconnection = connection
         PLAY_ALERT(alert)
-      }).catch(console.error)
+      }).catch(console.error).finally(() => {
+        if(Vconnection)
+          Vconnection.leave()
+        else console.log('NO VOICE CONNECTION TO LEAVE')
+      })
     }
   }
 }
