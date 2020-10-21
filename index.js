@@ -20,6 +20,7 @@ const VOLUME = 0.1
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
 const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 const LINK_NCS = 'https://www.youtube.com/watch?v=cQKuD49zKvU'
+const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 
 /* Channel IDs*/
 const CHID_SPAM = '675644867447095296'
@@ -30,8 +31,9 @@ const CHID_ANIME = '730931465793044550' //voice
 const CHID_CHILLSTEP = '725473321868591104' //muzix
 const CHID_NCM = '766768566263087124' //muzix
 const CHID_NCS = '766835115564859403' //muzix
+const CHID_POP = '768594119341375489' //muzix
 const CHIDS_NOINTRO = [
-   CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS,
+   CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS, CHID_POP,
 ]
 
 /**************************
@@ -160,7 +162,8 @@ const CHECK_ALERT = function() {
         else console.log('NO VOICE CONNECTION TO DISCONNECT')
       })
     }
-  }
+  } else if(Vconnection)
+    Vconnection.disconnect()
 }
 
 /* Zyborg function to queue next alert */
@@ -184,6 +187,7 @@ const Zyborg = new Discord.Client()
 const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
 const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
 const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
+const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 
 
 /**************************/
@@ -311,3 +315,4 @@ Zyborg.login(process.env.ZYBORG_TOKEN)
 ZJ_Chillstep.login(process.env.ZJCHILLSTEP_TOKEN)
 ZJ_NCM.login(process.env.ZJNOCOPYRIGHTMUSIC_TOKEN)
 ZJ_NCS.login(process.env.ZJNOCOPYRIGHTSOUNDS_TOKEN)
+ZJ_Pop.login(process.env.ZJPOP_TOKEN)
