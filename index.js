@@ -155,8 +155,8 @@ const CHECK_ALERT = function() {
         PLAY_ALERT(alert)
       }).catch(console.error).finally(() => {
         if(Vconnection)
-          Vconnection.leave()
-        else console.log('NO VOICE CONNECTION TO LEAVE')
+          Vconnection.disconnect()
+        else console.log('NO VOICE CONNECTION TO DISCONNECT')
       })
     }
   }
