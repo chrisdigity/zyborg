@@ -8,7 +8,9 @@ require("dotenv").config()
 //let Vcurr = 0
 let Vqueue = []
 let Vconnection = null
-const Users = {} // { id: <snowflake>, p}
+const Users = {}
+let MSGID_PRESENCE = null
+
 
 /**********************
  * USER CONFIGURATION *
@@ -26,13 +28,10 @@ const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 const LINK_NCS = 'https://www.youtube.com/watch?v=cQKuD49zKvU'
 const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 
-/* Message IDs */
-const MSGID_PRESENCE = '768826397376249856'
-
 /* Channel IDs */
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
-const CHID_PRESENCE = '730596136938635334'
+const CHID_PRESENCE = '768828161864630333'
 const CHID_ANIME = '730931465793044550' //voice
 const CHID_CHILLSTEP = '725473321868591104' //muzix
 const CHID_NCM = '766768566263087124' //muzix
@@ -258,7 +257,20 @@ const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 /* ...on ready, log event and begin clear spam event */
 Zyborg.on("ready", () => {
   console.log(`${Zyborg.user.tag} is ready...`)
-  //refresh presence data
+  //obtain presence message id
+  Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
+    channel.messages.fetch().then(messages => {
+      messages.each(message => {
+        if(!MSGID_PRESENCE && message.author.id == Zyborg.user.id)
+          MSGID_PRESENCE = message.id
+        else message.delete().catch(console.error)
+      })
+    }).catch(console.error).finally(() => {
+      if(!MSGID_PRESENCE)
+        channel.send('```###```')
+    })
+  }).catch(console.error)
+  //read presence data
   Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
     channel.messages.fetch(MSGID_PRESENCE).then(message => {
       let content = message.content.split(/\r?\n/)
