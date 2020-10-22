@@ -10,6 +10,7 @@ let Vqueue = []
 let Vconnection = null
 const Users = {}
 let MSGID_PRESENCE = null
+let UPDATE_OK = false
 
 
 /**********************
@@ -144,6 +145,9 @@ const USER = function() {
 }
 
 const UPDATE_USER = function(BOT, userid, update) {
+  //return if ready to update
+  if(!UPDATE_OK)
+    return;
   //create new user, if necessary
   if(!Users.hasOwnProperty(userid))
     Users[userid] = new USER()
@@ -267,29 +271,33 @@ Zyborg.on("ready", () => {
       })
     }).catch(console.error).finally(() => {
       if(!MSGID_PRESENCE)
-        channel.send('```###```')
+        channel.send('```###```').then(message => {
+          MSGID_PRESENCE = message
+        }).catch(console.error)
+      else {
+        //read presence data
+        channel.messages.fetch(MSGID_PRESENCE).then(message => {
+          let content = message.content.split(/\r?\n/)
+          //obtain voice and presence index
+          let v_index = content.findIndex(el => el.includes(VOICE_IDENTIFIER))
+          let p_index = content.findIndex(el => el.includes(PRESENCE_IDENTIFIER))
+          //read data
+          if(v_index > 0) {
+            console.log('VOICE->', content[v_index++])
+            if(content[v_index])
+              console.log('VOICEDATA->', content[v_index].split(/<@?> /))
+          }
+          if(p_index > 0) {
+            console.log('PRESENCE->', content[p_index++], content[p_index++])
+            if(content[p_index])
+              console.log('PRESENCEDATA->', content[p_index].split(/<@?> /))
+          }
+          //set update ok
+          UPDATE_OK = true
+        }).catch(console.error)
+      }
     })
   }).catch(console.error)
-  //read presence data
-  Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
-    channel.messages.fetch(MSGID_PRESENCE).then(message => {
-      let content = message.content.split(/\r?\n/)
-      //obtain voice and presence index
-      let v_index = content.findIndex(el => el.includes(VOICE_IDENTIFIER))
-      let p_index = content.findIndex(el => el.includes(PRESENCE_IDENTIFIER))
-      //read data
-      if(v_index > 0) {
-        console.log('VOICE->', content[v_index++])
-        if(content[v_index])
-          console.log('VOICEDATA->', content[v_index].split(/<@?> /))
-      }
-      if(p_index > 0) {
-        console.log('PRESENCE->', content[p_index++], content[p_index++])
-        if(content[p_index])
-          console.log('PRESENCEDATA->', content[p_index].split(/<@?> /))
-      }
-    })
-  })
   //clear spam channel
   CLEAR_SPAM(Zyborg)
 })
