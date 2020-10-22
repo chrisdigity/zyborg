@@ -272,7 +272,10 @@ Zyborg.on("ready", () => {
     }).catch(console.error).finally(() => {
       if(!MSGID_PRESENCE)
         channel.send('```###```').then(message => {
+          //set message id
           MSGID_PRESENCE = message
+          //set update ok
+          UPDATE_OK = true
         }).catch(console.error)
       else {
         //read presence data
