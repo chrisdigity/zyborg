@@ -185,7 +185,7 @@ const UPDATE_USER = function(BOT, userid, update) {
   BOT.channels.fetch(CHID_PRESENCE).then(channel => {
     channel.messages.fetch(MSGID_PRESENCE).then(message => {
       message.edit(
-        content + voiceContent + '\n' + presenceContent + '\n\n_'
+        content + voiceContent + '\n' + presenceContent + '\n_'
       ).catch(console.error)
     }).catch(console.error)
   }).catch(console.error)
@@ -266,10 +266,16 @@ Zyborg.on("ready", () => {
       let v_index = content.findIndex(el => el.includes(VOICE_IDENTIFIER))
       let p_index = content.findIndex(el => el.includes(PRESENCE_IDENTIFIER))
       //read data
-      if(v_index > 0)
-        console.log('VOICE->', content[v_index++], content[v_index++])
-      if(p_index > 0)
-        console.log('VOICE->', content[p_index++], content[p_index++])
+      if(v_index > 0) {
+        console.log('VOICE->', content[v_index++])
+        if(content[v_index])
+          console.log('VOICEDATA->', content[v_index].split(/<@?> /))
+      }
+      if(p_index > 0) {
+        console.log('PRESENCE->', content[p_index++], content[p_index++])
+        if(content[p_index])
+          console.log('PRESENCEDATA->', content[p_index].split(/<@?> /))
+      }
     })
   })
   //clear spam channel
