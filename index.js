@@ -317,7 +317,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
   /* acquire presence data and log with a message */
   let id = cur.member.id
   let platform = Object.keys(cur.clientStatus)[0] || null
-  switch(platform.toLowerCase()) {
+  switch(platform) {
     case 'desktop': platform = ':desktop:'; break;
     case 'mobile': platform = ':mobile_phone:'; break;
     case 'web': platform = ':spider_web:'; break;
