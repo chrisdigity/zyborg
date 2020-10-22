@@ -17,8 +17,8 @@ const Users = {} // { id: <snowflake>, p}
 /* CONSTANTS */
 const GMT10 = 1000*60*60*10
 const VOLUME = 0.1
-const VOICE_IDENTIFIER = '#_Voice_GMT+10'
-const PRESENCE_IDENTIFIER = '#_Presence_GMT+10'
+const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
+const PRESENCE_IDENTIFIER = '**#_Presence_GMT+10**'
 
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
@@ -184,7 +184,9 @@ const UPDATE_USER = function(BOT, userid, update) {
   //update message content
   BOT.channels.fetch(CHID_PRESENCE).then(channel => {
     channel.messages.fetch(MSGID_PRESENCE).then(message => {
-      message.edit(content+voiceContent+presenceContent).catch(console.error)
+      message.edit(
+        content + voiceContent + '\n' + presenceContent + '\n\n_'
+      ).catch(console.error)
     }).catch(console.error)
   }).catch(console.error)
 }
@@ -313,7 +315,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
     case 'desktop': platform = ':desktop:'; break;
     case 'mobile': platform = ':mobile_phone:'; break;
     case 'web': platform = ':spider_web:'; break;
-    default: platform = ''
+    default: platform = ':grey_question:'
   }
   //create update object
   const update = {
