@@ -8,13 +8,17 @@ require("dotenv").config()
 //let Vcurr = 0
 let Vqueue = []
 let Vconnection = null
+const Users = {} // { id: <snowflake>, p}
 
 /**********************
  * USER CONFIGURATION *
  **********************/
 
 /* CONSTANTS */
+const GMT10 = 1000*60*60*10
 const VOLUME = 0.1
+const VOICE_IDENTIFIER = '#_Voice_GMT+10'
+const PRESENCE_IDENTIFIER = '#_Presence_GMT+10'
 
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
@@ -22,11 +26,13 @@ const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 const LINK_NCS = 'https://www.youtube.com/watch?v=cQKuD49zKvU'
 const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 
-/* Channel IDs*/
+/* Message IDs */
+const MSGID_PRESENCE = '768826397376249856'
+
+/* Channel IDs */
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
 const CHID_PRESENCE = '730596136938635334'
-const CHID_VOICE = '720459302963380274'
 const CHID_ANIME = '730931465793044550' //voice
 const CHID_CHILLSTEP = '725473321868591104' //muzix
 const CHID_NCM = '766768566263087124' //muzix
@@ -129,6 +135,60 @@ const CLEAR_SPAM = function(BOT) {
    setTimeout(CLEAR_SPAM, 86400000) */
 }
 
+const USER = function() {
+  this.name = ''
+  this.presenceTime = 0
+  this.presenceType = ''
+  this.voiceTime = 0
+  this.voiceFrom = null
+  this.voiceTo = null
+}
+
+const UPDATE_USER = function(BOT, userid, update) {
+  //create new user, if necessary
+  if(!Users.hasOwnProperty(userid))
+    Users[userid] = new USER()
+  //update userid with update object
+  for(const param in update)
+    Users[userid][param] = update[param]
+  //sort Users by name
+  let orderedUsers = []
+  Object.keys(Users).sort().forEach(key => orderedUsers.push(key))
+  //create message update
+  let content = '```All times are in GMT+10```\n'
+  let voiceContent = VOICE_IDENTIFIER + '\n'
+  let presenceContent = PRESENCE_IDENTIFIER + '\n'
+  for(let i = 0; i < orderedUsers.length; i++) {
+    let id = orderedUsers[i]
+    let user = Users[id]
+    let dateString = '*unknown date*'
+    if(user.voiceTime) {
+      let moved = Boolean(user.voiceFrom && user.voiceTo)
+      dateString = new Date(user.voiceTime+GMT10).toJSON().slice(0,16)
+      voiceContent += `<@${id}> ${dateString}\n`
+      if(user.voiceFrom) {
+        voiceContent += moved ? 'from' : 'left'
+        voiceContent += ` <#${user.voiceFrom}>\n`
+      }
+      if(user.voiceTo) {
+        voiceContent += moved ? 'to' : 'joined'
+        voiceContent += ` <#${user.voiceTo}>\n`
+      }
+    }
+    if(user.presenceTime) {
+      dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
+      presenceContent += user.presenceType
+      presenceContent += `<@${id}> ${dateString}\n`
+    }
+  }
+  //update message content
+  BOT.channels.fetch(CHID_PRESENCE).then(channel => {
+    channel.messages.fetch(MSGID_PRESENCE).then(message => {
+      message.edit(content+voiceContent+presenceContent).catch(console.error)
+    }).catch(console.error)
+  }).catch(console.error)
+}
+
 /* Zyborg function to play alert */
 const PLAY_ALERT = function(alert) {
   //++Vcurr
@@ -196,6 +256,21 @@ const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 /* ...on ready, log event and begin clear spam event */
 Zyborg.on("ready", () => {
   console.log(`${Zyborg.user.tag} is ready...`)
+  //refresh presence data
+  Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
+    channel.messages.fetch(MSGID_PRESENCE).then(message => {
+      let content = message.content.split(/\r?\n/)
+      //obtain voice and presence index
+      let v_index = content.findIndex(el => el.includes(VOICE_IDENTIFIER))
+      let p_index = content.findIndex(el => el.includes(PRESENCE_IDENTIFIER))
+      //read data
+      if(v_index > 0)
+        console.log('VOICE->', content[v_index++], content[v_index++])
+      if(p_index > 0)
+        console.log('VOICE->', content[p_index++], content[p_index++])
+    })
+  })
+  //clear spam channel
   CLEAR_SPAM(Zyborg)
 })
 Zyborg.on("message", message => {
@@ -231,30 +306,34 @@ Zyborg.on("guildMemberRemove", member => {
 })
 /* ...on presenceUpdate, log update appropriately */
 Zyborg.on("presenceUpdate", (old, cur) => {
-   /* acquire presence data and log with a message */
-   let platform = Object.keys(cur.clientStatus)[0] || '*unknown*'
-   let action = 'went'
-
-   /* conditional data */
-   if(cur.status == 'online') action = 'came'
-
-   /* send message */
-   Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
-      channel.send(
-         `**${cur.member.nickname || cur.member.user.tag}** __*${action}*__ ${cur.status} (${platform})`
-      ).catch(console.error)
-   }).catch(console.error)
+  /* acquire presence data and log with a message */
+  let id = cur.member.id
+  let platform = Object.keys(cur.clientStatus)[0] || null
+  switch(platform.toLowerCase()) {
+    case 'desktop': platform = ':desktop:'; break;
+    case 'mobile': platform = ':mobile_phone:'; break;
+    case 'web': platform = ':spider_web:'; break;
+    default: platform = ''
+  }
+  //create update object
+  const update = {
+    name: cur.member.nickname || cur.member.user.username,
+    presenceType: platform,
+    presenceTime: Date.now()
+  }
+  //update user
+  UPDATE_USER(Zyborg, id, update)
 })
 /* ...on voiceStateUpdate, log update appropriately */
 Zyborg.on("voiceStateUpdate", (old, cur) => {
   //ignore bot movements
   let state = cur.channelID ? cur : old
   let member = state.member
-  if(member.id == Zyborg.user.id)
+  let id = member.id
+  if(id == Zyborg.user.id)
     return;
   
    /* acquire voice data and action */
-   let voice = state.channel.name
    let voiceChannel = state.channel
    let action = 'moved to'
 
@@ -266,12 +345,15 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
    else if(old.channelID == cur.channelID)
      return;  //ignore all other 'same channel' actions
 
-   /* send message */
-   Zyborg.channels.fetch(CHID_VOICE).then(channel => {
-      channel.send(
-         `**${member.nickname || member.user.tag}** __*${action}*__ ${voice}`
-      ).catch(console.error)
-   }).catch(console.error)
+  //create update object
+  const update = {
+    name: member.nickname || member.user.username,
+    voiceFrom: old.channelID,
+    voiceTo: cur.channelID,
+    voiceTime: Date.now()
+  }
+  //update user
+  UPDATE_USER(Zyborg, id, update)
 
   //queue extra action advise
   let name = `${member.nickname || member.user.username}`
