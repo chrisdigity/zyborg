@@ -198,7 +198,7 @@ const UPDATE_USER = function(BOT, userid, update) {
 const PLAY_ALERT = function(alert) {
   //++Vcurr
   Vconnection.play(
-    DiscordTTS.getVoiceStream(alert.speak, 'ms-MY') //'en-AU')
+    DiscordTTS.getVoiceStream(alert.speak, 'ml-IN') //'en-AU')
   ).on("finish",() => {
     //if(--Vcurr == 0) {
       Vconnection.disconnect()
