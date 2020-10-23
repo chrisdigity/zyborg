@@ -178,7 +178,7 @@ const UPDATE_USER = function(BOT, userid, update) {
         voiceContent += ` <#${user.voiceTo}>\n`
       }
     }
-    if(user.presenceTime) {
+    if(user.presenceTime && !(user.voiceFrom || user.voiceTo)) {
       dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
       presenceContent += user.presenceType
       presenceContent += `<@${id}> ${dateString}\n`
@@ -293,7 +293,7 @@ Zyborg.on("ready", () => {
           if(p_index > 0) {
             console.log('PRESENCE->', content[p_index++], content[p_index++])
             if(content[p_index])
-              console.log('PRESENCEDATA->', content[p_index].split(/<@?> /))
+              console.log('PRESENCEDATA->', content[p_index].split(/(<@\b)?(> \b)/))
           }
           //set update ok
           UPDATE_OK = true
