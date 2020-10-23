@@ -288,12 +288,12 @@ Zyborg.on("ready", () => {
           if(v_index > 0) {
             console.log('VOICE->', content[v_index++])
             if(content[v_index])
-              console.log('VOICEDATA->', content[v_index].split(/<@?> /))
+              console.log('VOICEDATA->', content[v_index].replace(/<@|> /,',').split(','))
           }
           if(p_index > 0) {
             console.log('PRESENCE->', content[p_index++], content[p_index++])
             if(content[p_index])
-              console.log('PRESENCEDATA->', content[p_index].split(/(<@\b|> \b)/))
+              console.log('PRESENCEDATA->', content[p_index].replace(/<@|> /,',').split(','))
           }
           //set update ok
           UPDATE_OK = true
