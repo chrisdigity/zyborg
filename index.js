@@ -293,7 +293,7 @@ Zyborg.on("ready", () => {
           if(p_index > 0) {
             console.log('PRESENCE->', content[p_index++], content[p_index++])
             if(content[p_index])
-              console.log('PRESENCEDATA->', content[p_index].split(/(<@\b)?(> \b)/))
+              console.log('PRESENCEDATA->', content[p_index].split(/(<@\b|> \b)/))
           }
           //set update ok
           UPDATE_OK = true
