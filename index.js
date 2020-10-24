@@ -9,8 +9,7 @@ require("dotenv").config()
 let Vqueue = []
 let Vconnection = null
 const Users = {}
-let MSGID_PRESENCE = null
-let UPDATE_OK = false
+let MSGID_LASTSEEN = []
 
 
 /**********************
@@ -18,6 +17,8 @@ let UPDATE_OK = false
  **********************/
 
 /* CONSTANTS */
+const MSG_SPLIT_LENGTH = 1986
+const MSG_SPLIT_SEP = '\n_*break*'
 const GMT10 = 1000*60*60*10
 const VOLUME = 0.1
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
@@ -32,7 +33,7 @@ const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 /* Channel IDs */
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
-const CHID_PRESENCE = '768828161864630333'
+const CHID_LASTSEEN = '768828161864630333'
 const CHID_ANIME = '730931465793044550' //voice
 const CHID_CHILLSTEP = '725473321868591104' //muzix
 const CHID_NCM = '766768566263087124' //muzix
@@ -45,6 +46,15 @@ const CHIDS_NOINTRO = [
 /**************************
  * END USER CONFIGURATION *
  **************************/
+
+/* USER object */
+const USER = function() {
+  this.presenceTime = 0
+  this.presenceType = ''
+  this.voiceTime = 0
+  this.voiceFrom = null
+  this.voiceTo = null
+}
 
 /* YTMusic constructor */
 const YTMusic = function(n, id, src) {
@@ -78,11 +88,11 @@ const YTMusic = function(n, id, src) {
             YTDL(_self.source, {quality:'highestaudio'}),
             {volume: VOLUME}
           ).on("error", error => {
-            console.error(`${_self.name}: ${error}`)
+            BOT_ERROR(_self.client, error)
             connection.disconnect()
             _self.conn = null
           })
-        }).catch(console.error)
+        }).catch(error => BOT_ERROR(Zyborg, error))
       }
     }
     else if(old.channelID == _self.chid && cur.channelID != _self.chid)
@@ -110,6 +120,22 @@ const YTMusic = function(n, id, src) {
   }
 }
 
+/* required modules */
+const YTDL = require("ytdl-core")
+const Discord = require("discord.js")
+const DiscordTTS = require("discord-tts")
+
+/* Initialize discord bots */
+const Zyborg = new Discord.Client()
+const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
+const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
+const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
+const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
+
+const BOT_ERROR = function(BOT, error) {
+  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send(error).catch(console.error))
+}
+
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
    BOT.channels.fetch(CHID_SPAM).then(channel => {
@@ -133,65 +159,6 @@ const CLEAR_SPAM = function(BOT) {
 
    /* repeat clear event in ~24 hours *
    setTimeout(CLEAR_SPAM, 86400000) */
-}
-
-const USER = function() {
-  this.name = ''
-  this.presenceTime = 0
-  this.presenceType = ''
-  this.voiceTime = 0
-  this.voiceFrom = null
-  this.voiceTo = null
-}
-
-const UPDATE_USER = function(BOT, userid, update) {
-  //return if ready to update
-  if(!UPDATE_OK)
-    return;
-  //create new user, if necessary
-  if(!Users.hasOwnProperty(userid))
-    Users[userid] = new USER()
-  //update userid with update object
-  for(const param in update)
-    Users[userid][param] = update[param]
-  //sort Users by name
-  let orderedUsers = []
-  Object.keys(Users).sort().forEach(key => orderedUsers.push(key))
-  //create message update
-  let content = '```All times are in GMT+10```\n'
-  let voiceContent = VOICE_IDENTIFIER + '\n'
-  let presenceContent = PRESENCE_IDENTIFIER + '\n'
-  for(let i = 0; i < orderedUsers.length; i++) {
-    let id = orderedUsers[i]
-    let user = Users[id]
-    let dateString = '*unknown date*'
-    if(user.voiceTime) {
-      let moved = Boolean(user.voiceFrom && user.voiceTo)
-      dateString = new Date(user.voiceTime+GMT10).toJSON().slice(0,16)
-      voiceContent += `<@${id}> ${dateString}\n`
-      if(user.voiceFrom) {
-        voiceContent += moved ? 'from' : 'left'
-        voiceContent += ` <#${user.voiceFrom}>\n`
-      }
-      if(user.voiceTo) {
-        voiceContent += moved ? 'to' : 'joined'
-        voiceContent += ` <#${user.voiceTo}>\n`
-      }
-    }
-    if(user.presenceTime && !(user.voiceFrom || user.voiceTo)) {
-      dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
-      presenceContent += user.presenceType
-      presenceContent += `<@${id}> ${dateString}\n`
-    }
-  }
-  //update message content
-  BOT.channels.fetch(CHID_PRESENCE).then(channel => {
-    channel.messages.fetch(MSGID_PRESENCE).then(message => {
-      message.edit(
-        content + voiceContent + '\n' + presenceContent + '\n_'
-      ).catch(console.error)
-    }).catch(console.error)
-  }).catch(console.error)
 }
 
 /* Zyborg function to play alert */
@@ -220,12 +187,7 @@ const CHECK_ALERT = function() {
       alert.channel.join().then(connection => {
         Vconnection = connection
         PLAY_ALERT(alert)
-      }).catch(err => {
-        console.error(err)
-        if(Vconnection)
-          Vconnection.disconnect()
-        else console.log('NO VOICE CONNECTION TO DISCONNECT')
-      })
+      }).catch(error => BOT_ERROR(Zyborg, error))
     }
   } else if(Vconnection)
     Vconnection.disconnect()
@@ -242,17 +204,81 @@ const QUEUE_ALERT = function(alert) {
     CHECK_ALERT()
 }
 
-/* required modules */
-const YTDL = require("ytdl-core")
-const Discord = require("discord.js")
-const DiscordTTS = require("discord-tts")
-
-/* Initialize discord bots */
-const Zyborg = new Discord.Client()
-const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
-const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
-const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
-const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
+const UPDATE_USER = function(userid, update) {
+  //create new user, if necessary
+  if(!Users.hasOwnProperty(userid))
+    Users[userid] = new USER()
+  //update userid with update object
+  for(const param in update)
+    Users[userid][param] = update[param]
+  //sort Users by name
+  let orderedUsers = []
+  Object.keys(Users).sort().forEach(key => orderedUsers.push(key))
+  //create message update
+  let content = '```All times are in GMT+10```\n'
+  let voiceContent = VOICE_IDENTIFIER + '\n'
+  let presenceContent = PRESENCE_IDENTIFIER + '\n'
+  for(let i = 0; i < orderedUsers.length; i++) {
+    let id = orderedUsers[i]
+    let user = Users[id]
+    let dateString = '*unknown date*'
+    if(user.voiceTime) {
+      let moved = Boolean(user.voiceFrom && user.voiceTo)
+      dateString = new Date(user.voiceTime+GMT10).toJSON().slice(0,16)
+      voiceContent += `<@${id}> ${dateString}\n`
+      if(user.presenceTime) {
+        dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
+        presenceContent += user.presenceType
+        presenceContent += `<@${id}> ${dateString}\n`
+      }
+      if(user.voiceFrom) {
+        voiceContent += moved ? 'from' : 'left'
+        voiceContent += ` <#${user.voiceFrom}>\n`
+      }
+      if(user.voiceTo) {
+        voiceContent += moved ? 'to' : 'joined'
+        voiceContent += ` <#${user.voiceTo}>\n`
+      }
+    }
+  }
+  //append presence and voice content
+  content = content + presenceContent + '\n' + voiceContent
+  //update message content
+  Zyborg.channels.fetch(CHID_LASTSEEN).then(channel => {
+    let i = 0
+    while(content.length) {
+      // obtain partial message content
+      let contentPart = ''
+      let splitIndex = content.substr(0,MSG_SPLIT_LENGTH).lastIndexOf('\n')
+      if(splitIndex > -1)
+        contentPart = content.substring(0,splitIndex)
+      else contentPart = content.trimEnd()
+      content = content.substr(MSG_SPLIT_LENGTH + 1)
+      // append partial message separator
+      contentPart += MSG_SPLIT_SEP
+      // handle partial message
+      if(i < MSGID_LASTSEEN.length) {
+        // edit MSGID_LASTSEEN[i] content
+        channel.messages.fetch(MSGID_LASTSEEN[i]).then(message =>
+          message.edit(contentPart).catch(error => BOT_ERROR(Zyborg, error))
+        ).catch(error => BOT_ERROR(Zyborg, error))
+      } else {
+        // create additional message; add to MSGID_LASTSEEN array
+        channel.send(contentPart).then(
+          message => MSGID_LASTSEEN.push(message.id)
+        ).catch(error => BOT_ERROR(Zyborg, error))
+      }
+      // increment msg index
+      i++
+    }
+    // clear remaining messages
+    while(i < MSGID_LASTSEEN.length) {
+      channel.messages.fetch(MSGID_LASTSEEN[i++]).then(message =>
+        message.edit(MSG_SPLIT_SEP).catch(error => BOT_ERROR(Zyborg, error))
+      ).catch(error => BOT_ERROR(Zyborg, error))
+    }
+  }).catch(error => BOT_ERROR(Zyborg, error))
+}
 
 
 /**************************/
@@ -262,45 +288,50 @@ const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 Zyborg.on("ready", () => {
   console.log(`${Zyborg.user.tag} is ready...`)
   //obtain presence message id
-  Zyborg.channels.fetch(CHID_PRESENCE).then(channel => {
+  Zyborg.channels.fetch(CHID_LASTSEEN).then(channel => {
     channel.messages.fetch().then(messages => {
       messages.each(message => {
-        if(!MSGID_PRESENCE && message.author.id == Zyborg.user.id)
-          MSGID_PRESENCE = message.id
-        else message.delete().catch(console.error)
+        if(message.author.id == Zyborg.user.id)
+          MSGID_LASTSEEN.push(message.id)
+        else message.delete().catch(error => BOT_ERROR(Zyborg, error))
       })
-    }).catch(console.error).finally(() => {
-      if(!MSGID_PRESENCE)
-        channel.send('```###```').then(message => {
-          //set message id
-          MSGID_PRESENCE = message.id
-          //set update ok
-          UPDATE_OK = true
-        }).catch(console.error)
-      else {
+    }).catch(error => BOT_ERROR(Zyborg, error)).finally(() => {
+      let i = 0
+      let recordType = 0 // 1: presence user/data, 2: voice user, 3: voice data
+      while(i < MSGID_LASTSEEN.length) {
         //read presence data
-        channel.messages.fetch(MSGID_PRESENCE).then(message => {
+        let update = { id: null, data: null }
+        channel.messages.fetch(MSGID_LASTSEEN).then(message => {
           let content = message.content.split(/\r?\n/)
-          //obtain voice and presence index
-          let v_index = content.findIndex(el => el.includes(VOICE_IDENTIFIER))
-          let p_index = content.findIndex(el => el.includes(PRESENCE_IDENTIFIER))
-          //read data
-          if(v_index > 0) {
-            console.log('VOICE->', content[v_index++])
-            if(content[v_index])
-              console.log('VOICEDATA->', content[v_index].replace('<@',',').replace('> ',',').split(','))
+          for (let line in content) {
+            if(line.includes(PRESENCE_IDENTIFIER))
+              recordType = 1
+            else if(line.includes(VOICE_IDENTIFIER))
+              recordType = 2
+            else if(recordType == 1) {
+              line = line.replace('<@',',').replace('> ',',').split(',')
+              UPDATE_USER(line[1], { presenceType: line[0], presenceTime: line[2] })
+            } else if(recordType == 2) {
+              line = line.replace('<@','').replace('> ',',').split(',')
+              //store voice name and time
+              update.id = line[0]
+              update.data = { voiceTime: line[1] }
+            } else if(recordType == 3) {
+              if(line.includes('*from* ')) {
+                update.data.voiceFrom = line.replace('*from* <@','').replace('>','')
+                continue; //should have another line of data for user
+              }
+              else if(line.includes('*to* ') || line.includes('*joined* '))
+                update.data.voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
+              else if(line.includes('*left* '))
+                update.data.voiceFrom = line.replace('*left* <@','').replace('>','')
+              UPDATE_USER(update.id, update.data)
+            }
           }
-          if(p_index > 0) {
-            console.log('PRESENCE->', content[p_index++], content[p_index++])
-            if(content[p_index])
-              console.log('PRESENCEDATA->', content[p_index].replace('<@',',').replace('> ',',').split(','))
-          }
-          //set update ok
-          UPDATE_OK = true
-        }).catch(console.error)
+        }).catch(error => BOT_ERROR(Zyborg, error))
       }
     })
-  }).catch(console.error)
+  }).catch(error => BOT_ERROR(Zyborg, error))
   //clear spam channel
   CLEAR_SPAM(Zyborg)
 })
@@ -320,8 +351,8 @@ Zyborg.on("guildMemberAdd", member => {
          name += `[${member.nickname}]`
       channel.send(
          `:white_check_mark: **${name}** just __entered__ the server :wave:`
-      ).catch(console.error)
-   }).catch(console.error)
+      ).catch(error => BOT_ERROR(Zyborg, error))
+   }).catch(error => BOT_ERROR(Zyborg, error))
 })
 /* ...on guildMemberRemove, log event (goodbye) */
 Zyborg.on("guildMemberRemove", member => {
@@ -332,8 +363,8 @@ Zyborg.on("guildMemberRemove", member => {
          name += `[${member.nickname}]`
       channel.send(
          `:x: **${name}** just __exited__ the server :call_me:`
-      ).catch(console.error)
-   }).catch(console.error)
+      ).catch(error => BOT_ERROR(Zyborg, error))
+   }).catch(error => BOT_ERROR(Zyborg, error))
 })
 /* ...on presenceUpdate, log update appropriately */
 Zyborg.on("presenceUpdate", (old, cur) => {
@@ -384,7 +415,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     voiceTime: Date.now()
   }
   //update user
-  UPDATE_USER(Zyborg, id, update)
+  UPDATE_USER(id, update)
 
   //queue extra action advise
   let name = `${member.nickname || member.user.username}`
