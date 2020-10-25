@@ -299,7 +299,7 @@ Zyborg.on("ready", () => {
     channel.messages.fetch().then(messages => {
       let content = ''
       let recordType = 0 // 1: presence user/data, 2: voice user, 3: voice data
-      let update = { id: null, data: null }
+      let readID = null
       messages.each(message => {
         if(message.author.id == Zyborg.user.id) {
           MSGID_LASTSEEN.push(message.id)
@@ -307,28 +307,42 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       for (let line in content.split(/\r?\n/)) {
+        //filter bogus lines
+        if(!line || line.includes('_'))
+          continue;
+        //decipher...
         if(line.includes(PRESENCE_IDENTIFIER))
           recordType = 1
         else if(line.includes(VOICE_IDENTIFIER))
           recordType = 2
-        else if(recordType == 1) {
+        else if(recordType == 1) { //presence read
           line = line.replace('<@',',').replace('> ',',').split(',')
-          UPDATE_USER(line[1], { presenceType: line[0], presenceTime: line[2] }, true)
-        } else if(recordType == 2) {
+          //store user id and check for existing user
+          readID = line[0]
+          if(!Users.hasOwnProperty(readID))
+            Users[readID] = new USER()
+          //store presence data
+          Users[readID].presenceTime = line[2]
+          Users[readID].presenceType = line[0]
+        } else if(recordType == 2) { //voice read
           line = line.replace('<@','').replace('> ',',').split(',')
-          //store voice name and time
-          update.id = line[0]
-          update.data = { voiceTime: line[1] }
-        } else if(recordType == 3) {
-          if(line.includes('*from* ')) {
-            update.data.voiceFrom = line.replace('*from* <@','').replace('>','')
-            continue; //should have another line of data for user
-          }
-          else if(line.includes('*to* ') || line.includes('*joined* '))
-            update.data.voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
-          else if(line.includes('*left* '))
-            update.data.voiceFrom = line.replace('*left* <@','').replace('>','')
-          UPDATE_USER(update.id, update.data, true)
+          //store user id and check for existing user
+          readID = line[0]
+          if(!Users.hasOwnProperty(readID))
+            Users[readID] = new USER()
+          //store voice time
+          Users[readID].voiceTime = line[1]
+          //advance voice type
+          recordType++
+        } else if(recordType == 3) { //voice read extended
+          if(line.includes('*from* ') || line.includes('*left* ')) {
+            Users[readID].voiceFrom = line.replace('*from* <@','').replace('*left* <@','').replace('>','')
+            if(line.includes('*from* '))
+              continue; //should have another line of data for user
+          } else if(line.includes('*to* ') || line.includes('*joined* '))
+            Users[readID].voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
+          //return former voice type
+          recordType--
         }
       }
       //update names of users
