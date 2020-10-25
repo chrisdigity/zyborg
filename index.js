@@ -392,7 +392,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
     presenceTime: Date.now()
   }
   //update user
-  UPDATE_USER(Zyborg, id, update)
+  UPDATE_USER(id, update)
 })
 /* ...on voiceStateUpdate, log update appropriately */
 Zyborg.on("voiceStateUpdate", (old, cur) => {
