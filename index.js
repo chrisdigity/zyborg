@@ -6,9 +6,9 @@ require("dotenv").config()
 
 /* vars */
 //let Vcurr = 0
+const Users = {}
 let Vqueue = []
 let Vconnection = null
-const Users = {}
 let MSGID_LASTSEEN = []
 let UPDATE_OK = false
 
@@ -18,12 +18,16 @@ let UPDATE_OK = false
  **********************/
 
 /* CONSTANTS */
+const VOLUME = 0.1
+const GMT10 = 1000*60*60*10
 const MSG_SPLIT_LENGTH = 1986
 const MSG_SPLIT_SEP = '\n_*break*'
-const GMT10 = 1000*60*60*10
-const VOLUME = 0.1
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
 const PRESENCE_IDENTIFIER = '**#_Presence_GMT+10**'
+const JOINED = '*joined*'
+const LEFT = '*left*'
+const FROM = '*from*'
+const TO = '*to*'
 
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
@@ -240,12 +244,12 @@ const UPDATE_USER = function(userid, update) {
       dateString = new Date(user.voiceTime+GMT10).toJSON().slice(0,16)
       voiceContent += `<@${id}> ${dateString}\n`
       if(user.voiceFrom) {
-        voiceContent += moved ? 'from' : 'left'
-        voiceContent += ` <#${user.voiceFrom}>\n`
+        voiceContent += moved ? FROM : LEFT
+        voiceContent += `<#${user.voiceFrom}>\n`
       }
       if(user.voiceTo) {
-        voiceContent += moved ? 'to' : 'joined'
-        voiceContent += ` <#${user.voiceTo}>\n`
+        voiceContent += moved ? TO : JOINED
+        voiceContent += `<#${user.voiceTo}>\n`
       }
     }
   }
@@ -340,11 +344,11 @@ Zyborg.on("ready", () => {
           //advance voice type
           recordType++
         } else if(recordType == 3) { //voice read extended
-          if(line.includes('*from* ') || line.includes('*left* ')) {
+          if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom = line.replace('*from* <@','').replace('*left* <@','').replace('>','')
-            if(line.includes('*from* '))
+            if(line.includes(FROM))
               return; //should have another line of data for user
-          } else if(line.includes('*to* ') || line.includes('*joined* '))
+          } else if(line.includes(TO) || line.includes(JOINED))
             Users[readID].voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
           //return former voice type
           recordType--
