@@ -48,6 +48,10 @@ const CHIDS_NOINTRO = [
  * END USER CONFIGURATION *
  **************************/
 
+const BOT_ERROR = function(BOT, error) {
+  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send('BOT_ERROR():\n'+error).catch(console.error))
+}
+
 /* USER object */
 const USER = function() {
   this.name = '_'
@@ -94,7 +98,7 @@ const YTMusic = function(n, id, src) {
             connection.disconnect()
             _self.conn = null
           })
-        }).catch(error => BOT_ERROR(Zyborg, error))
+        }).catch(error => BOT_ERROR(_self.client, error))
       }
     }
     else if(old.channelID == _self.chid && cur.channelID != _self.chid)
@@ -133,10 +137,6 @@ const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
 const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
 const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
 const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
-
-const BOT_ERROR = function(BOT, error) {
-  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send(error).catch(console.error))
-}
 
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
@@ -311,7 +311,7 @@ Zyborg.on("ready", () => {
         //debug all lines
         console.log(recordType,'~',line)
         //filter bogus lines
-        if(!line || line.includes('_'))
+        if(!line || line.includes('_*break*'))
           return;
         //decipher...
         if(line.includes(PRESENCE_IDENTIFIER))
