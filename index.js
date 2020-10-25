@@ -501,6 +501,7 @@ process.once('SIGTERM', () => {
   
   // destroy all bots
   Zyborg.destroy()
+  ZJ_Pop.destroy()
   ZJ_Chillstep.destroy()
   ZJ_NCM.destroy()
   ZJ_NCS.destroy()
