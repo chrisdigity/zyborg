@@ -1,6 +1,12 @@
 /* eslint-env node, es6 */
 /* eslint-disable no-console */
 
+/* required modules */
+const YTDL = require("ytdl-core")
+const Discord = require("discord.js")
+const DiscordTTS = require("discord-tts")
+const { spawn } = require("child_process")
+
 /* vars */
 //let Vcurr = 0
 const Users = {}
@@ -16,7 +22,7 @@ let UPDATE_OK = false
 
 /* CONSTANTS */
 const VOLUME = 0.1
-const GMT10 = 1000*60*60*10
+const TIMEZONE = 1000*60*60*10
 const MSG_SPLIT_LENGTH = 1986
 const MSG_SPLIT_SEP = '\n_*break*'
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
@@ -32,6 +38,10 @@ const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 const LINK_NCS = 'https://www.youtube.com/watch?v=Ioo-5ihWo6M'
 const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
+const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
+
+/* Role IDs */
+const RID_ADMIN = '694657068220809287'
 
 /* Channel IDs */
 const CHID_SPAM = '675644867447095296'
@@ -50,9 +60,6 @@ const CHIDS_NOINTRO = [
  * END USER CONFIGURATION *
  **************************/
 
-const BOT_ERROR = function(BOT, error) {
-  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send('BOT_ERROR():\n'+error).catch(console.error))
-}
 
 /* USER object */
 const USER = function() {
@@ -62,6 +69,14 @@ const USER = function() {
   this.voiceTime = 0
   this.voiceFrom = null
   this.voiceTo = null
+}
+
+const HEROKU_RESTART = function() {
+  spawn("heroku restart")
+}
+
+const BOT_ERROR = function(BOT, error) {
+  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send('BOT_ERROR():\n'+error).catch(console.error))
 }
 
 /* YTMusic constructor */
@@ -96,9 +111,13 @@ const YTMusic = function(n, id, src) {
             YTDL(_self.source, {quality:'highestaudio'}),
             {volume: VOLUME}
           ).on("error", error => {
+            //standard errors
             if(error == STREAM_ENDED_ERROR)
-              BOT_ERROR(_self.client, '<@&694657068220809287>, the link provided for this livestream has ended.\nPlease update the link manually.')
-            else BOT_ERROR(_self.client, error)
+              BOT_ERROR(_self.client, `*${STREAM_ENDED_ERROR}*\n<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.`)
+            else if(error == STREAM_REQUESTS_ERROR) {
+              BOT_ERROR(_self.client, `*${STREAM_REQUESTS_ERROR}, attempting server switch...*\n<@${cur.member.id}>, please try again once this message dissappears.>`)
+              setTimeout(HEROKU_RESTART, 1000)
+            } else BOT_ERROR(_self.client, error)
             connection.disconnect()
             _self.conn = null
           })
@@ -130,17 +149,21 @@ const YTMusic = function(n, id, src) {
   }
 }
 
-/* required modules */
-const YTDL = require("ytdl-core")
-const Discord = require("discord.js")
-const DiscordTTS = require("discord-tts")
 
-/* Initialize discord bots */
+/**********************
+ * BOT INITIALIZATION *
+ **********************/
+
 const Zyborg = new Discord.Client()
+const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
 const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
 const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
-const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
+
+/**************************
+ * END BOT INITIALIZATION *
+ **************************/
+
 
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
@@ -235,13 +258,13 @@ const UPDATE_USER = function(userid, update) {
     let user = Users[id]
     let dateString = '*unknown date*'
     if(user.presenceTime) {
-      dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
+      dateString = new Date(user.presenceTime + TIMEZONE).toJSON().slice(0,16)
       presenceContent += user.presenceType
       presenceContent += `<@${id}> ${dateString}\n`
     }
     if(user.voiceTime) {
       let moved = Boolean(user.voiceFrom && user.voiceTo)
-      dateString = new Date(user.voiceTime+GMT10).toJSON().slice(0,16)
+      dateString = new Date(user.voiceTime + TIMEZONE).toJSON().slice(0,16)
       voiceContent += `<@${id}> ${dateString}\n`
       if(user.voiceFrom) {
         voiceContent += moved ? FROM : LEFT
