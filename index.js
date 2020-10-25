@@ -332,12 +332,12 @@ Zyborg.on("ready", () => {
         }
       }
       //update names of users
-      /*
       Object.keys(Users).forEach(userid => {
+        console.log(`check ${userid}`)
         channel.guild.members.fetch(userid).then(member => {
           Users[userid].name = member.nickname || member.user.username;
         }).catch(console.error)
-      })*/
+      })
     }).catch(console.error)
   }).catch(console.error)
   //clear spam channel
