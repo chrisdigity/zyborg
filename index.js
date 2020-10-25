@@ -10,6 +10,7 @@ let Vqueue = []
 let Vconnection = null
 const Users = {}
 let MSGID_LASTSEEN = []
+let UPDATE_OK = false
 
 
 /**********************
@@ -205,7 +206,7 @@ const QUEUE_ALERT = function(alert) {
     CHECK_ALERT()
 }
 
-const UPDATE_USER = function(userid, update, noedit) {
+const UPDATE_USER = function(userid, update) {
   //create new user, if necessary
   if(!Users.hasOwnProperty(userid))
     Users[userid] = new USER()
@@ -213,7 +214,7 @@ const UPDATE_USER = function(userid, update, noedit) {
   for(const param in update)
     Users[userid][param] = update[param]
   
-  if(noedit)
+  if(!UPDATE_OK)
     return;
   
   //sort Users by name
@@ -303,7 +304,7 @@ Zyborg.on("ready", () => {
       messages.each(message => {
         if(message.author.id == Zyborg.user.id) {
           MSGID_LASTSEEN.unshift(message.id)
-          content += message.content + '\n'
+          content = message.content + '\n' + content
         } else message.delete().catch(console.error)
       })
       content.split(/\r?\n/).forEach(line => {
@@ -323,6 +324,7 @@ Zyborg.on("ready", () => {
           readID = line[0]
           if(!Users.hasOwnProperty(readID))
             Users[readID] = new USER()
+          else return; //ignore overwriting updates
           //store presence data
           Users[readID].presenceTime = line[2]
           Users[readID].presenceType = line[0]
@@ -332,6 +334,7 @@ Zyborg.on("ready", () => {
           readID = line[0]
           if(!Users.hasOwnProperty(readID))
             Users[readID] = new USER()
+          else return; //ignore overwriting updates
           //store voice time
           Users[readID].voiceTime = line[1]
           //advance voice type
@@ -353,6 +356,8 @@ Zyborg.on("ready", () => {
           Users[userid].name = member.nickname || member.user.username;
         }).catch(console.error)
       })
+      //set UPDATE)OK
+      UPDATE_OK = true
     }).catch(console.error)
   }).catch(console.error)
   //clear spam channel
