@@ -307,6 +307,8 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       for (let line in content.split(/\r?\n/)) {
+        //debug all lines
+        console.log(line)
         //filter bogus lines
         if(!line || line.includes('_'))
           continue;
