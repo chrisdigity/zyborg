@@ -345,11 +345,11 @@ Zyborg.on("ready", () => {
           recordType++
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
-            Users[readID].voiceFrom = line.replace('*from* <@','').replace('*left* <@','').replace('>','')
+            Users[readID].voiceFrom = line.replace(`${FROM}<#'`,'').replace(`${LEFT}<#'`,'').replace('>','')
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
-            Users[readID].voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
+            Users[readID].voiceTo = line.replace(`${TO}<#'`,'').replace(`${JOINED}<#'`,'').replace('>','')
           //return former voice type
           recordType--
         }
