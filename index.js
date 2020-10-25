@@ -288,9 +288,9 @@ const UPDATE_USER = function(userid, update) {
       let contentPart = ''
       let splitIndex = content.substr(0,MSG_SPLIT_LENGTH).lastIndexOf('\n')
       if(splitIndex > -1)
-        contentPart = content.substring(0,splitIndex)
+        contentPart = content.substring(0, splitIndex)
       else contentPart = content.trimEnd()
-      content = content.substr(MSG_SPLIT_LENGTH + 1)
+      content = content.substr(splitIndex + 1)
       // append partial message separator
       contentPart += MSG_SPLIT_SEP
       // handle partial message
