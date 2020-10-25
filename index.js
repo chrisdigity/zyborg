@@ -309,7 +309,7 @@ Zyborg.on("ready", () => {
       })
       content.split(/\r?\n/).forEach(line => {
         //debug all lines
-        console.log(line)
+        console.log(recordType,'~',line)
         //filter bogus lines
         if(!line || line.includes('_'))
           return;
