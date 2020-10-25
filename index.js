@@ -297,50 +297,47 @@ Zyborg.on("ready", () => {
   //obtain presence message id
   Zyborg.channels.fetch(CHID_LASTSEEN).then(channel => {
     channel.messages.fetch().then(messages => {
-      messages.each(message => {
-        if(message.author.id == Zyborg.user.id)
-          MSGID_LASTSEEN.push(message.id)
-        else message.delete().catch(error => BOT_ERROR(Zyborg, error))
-      })
-    }).catch(console.error).finally(() => {
+      let content = ''
       let recordType = 0 // 1: presence user/data, 2: voice user, 3: voice data
       let update = { id: null, data: null }
-      //read presence data
-      channel.messages.fetch(MSGID_LASTSEEN).then(message => {
-        let content = message.content.split(/\r?\n/)
-        for (let line in content) {
-          if(line.includes(PRESENCE_IDENTIFIER))
-            recordType = 1
-          else if(line.includes(VOICE_IDENTIFIER))
-            recordType = 2
-          else if(recordType == 1) {
-            line = line.replace('<@',',').replace('> ',',').split(',')
-            UPDATE_USER(line[1], { presenceType: line[0], presenceTime: line[2] }, true)
-          } else if(recordType == 2) {
-            line = line.replace('<@','').replace('> ',',').split(',')
-            //store voice name and time
-            update.id = line[0]
-            update.data = { voiceTime: line[1] }
-          } else if(recordType == 3) {
-            if(line.includes('*from* ')) {
-              update.data.voiceFrom = line.replace('*from* <@','').replace('>','')
-              continue; //should have another line of data for user
-            }
-            else if(line.includes('*to* ') || line.includes('*joined* '))
-              update.data.voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
-            else if(line.includes('*left* '))
-              update.data.voiceFrom = line.replace('*left* <@','').replace('>','')
-            UPDATE_USER(update.id, update.data, true)
+      messages.each(message => {
+        if(message.author.id == Zyborg.user.id) {
+          MSGID_LASTSEEN.push(message.id)
+          content += message.content + '\n'
+        } else message.delete().catch(console.error)
+      })
+      for (let line in content.split(/\r?\n/)) {
+        if(line.includes(PRESENCE_IDENTIFIER))
+          recordType = 1
+        else if(line.includes(VOICE_IDENTIFIER))
+          recordType = 2
+        else if(recordType == 1) {
+          line = line.replace('<@',',').replace('> ',',').split(',')
+          UPDATE_USER(line[1], { presenceType: line[0], presenceTime: line[2] }, true)
+        } else if(recordType == 2) {
+          line = line.replace('<@','').replace('> ',',').split(',')
+          //store voice name and time
+          update.id = line[0]
+          update.data = { voiceTime: line[1] }
+        } else if(recordType == 3) {
+          if(line.includes('*from* ')) {
+            update.data.voiceFrom = line.replace('*from* <@','').replace('>','')
+            continue; //should have another line of data for user
           }
+          else if(line.includes('*to* ') || line.includes('*joined* '))
+            update.data.voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
+          else if(line.includes('*left* '))
+            update.data.voiceFrom = line.replace('*left* <@','').replace('>','')
+          UPDATE_USER(update.id, update.data, true)
         }
-        //update names of users
-        Object.keys(Users).forEach(userid => {
-          channel.guild.members.fetch(userid).then(member => {
-            Users[userid].name = member.nickname || member.user.username;
-          }).catch(console.error)
-        })
-      }).catch(console.error)
-    })
+      }
+      //update names of users
+      Object.keys(Users).forEach(userid => {
+        channel.guild.members.fetch(userid).then(member => {
+          Users[userid].name = member.nickname || member.user.username;
+        }).catch(console.error)
+      })
+    }).catch(console.error)
   }).catch(console.error)
   //clear spam channel
   CLEAR_SPAM(Zyborg)
