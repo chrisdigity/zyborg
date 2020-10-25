@@ -306,12 +306,12 @@ Zyborg.on("ready", () => {
           content += message.content + '\n'
         } else message.delete().catch(console.error)
       })
-      for (let line in content.split(/\r?\n/)) {
+      content.split(/\r?\n/).forEach(line => {
         //debug all lines
         console.log(line)
         //filter bogus lines
         if(!line || line.includes('_'))
-          continue;
+          return;
         //decipher...
         if(line.includes(PRESENCE_IDENTIFIER))
           recordType = 1
@@ -340,13 +340,13 @@ Zyborg.on("ready", () => {
           if(line.includes('*from* ') || line.includes('*left* ')) {
             Users[readID].voiceFrom = line.replace('*from* <@','').replace('*left* <@','').replace('>','')
             if(line.includes('*from* '))
-              continue; //should have another line of data for user
+              return; //should have another line of data for user
           } else if(line.includes('*to* ') || line.includes('*joined* '))
             Users[readID].voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
           //return former voice type
           recordType--
         }
-      }
+      })
       //update names of users
       Object.keys(Users).forEach(userid => {
         channel.guild.members.fetch(userid).then(member => {
