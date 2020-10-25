@@ -326,7 +326,7 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store presence data
-          Users[readID].presenceTime = line[2]
+          Users[readID].presenceTime = parseInt(line[2])
           Users[readID].presenceType = line[0]
         } else if(recordType == 2) { //voice read
           line = line.replace('<@','').replace('> ',',').split(',')
@@ -336,7 +336,7 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store voice time
-          Users[readID].voiceTime = line[1]
+          Users[readID].voiceTime = parseInt(line[1])
           //advance voice type
           recordType++
         } else if(recordType == 3) { //voice read extended
