@@ -100,7 +100,7 @@ const YTMusic = function(n, id, src) {
             {volume: VOLUME}
           ).on("error", error => {
             if(error == STREAM_ENDED_ERROR)
-              BOT_ERROR(_self.client, '<@&694657068220809287>, this livestream has ended. Please update the link manually.')
+              BOT_ERROR(_self.client, '<@&694657068220809287>, the link provided for this livestream has ended.\nPlease update the link manually.')
             else BOT_ERROR(_self.client, error)
             connection.disconnect()
             _self.conn = null
@@ -336,6 +336,9 @@ Zyborg.on("ready", () => {
           Users[readID].presenceTime = parseInt(line[2])
           Users[readID].presenceType = line[0]
         } else if(recordType == 2) { //voice read
+          //advance voice type
+          recordType++
+          //decipher line
           line = line.replace('<@','').replace('> ',',').split(',')
           //store user id and check for existing user
           readID = line[0]
@@ -344,8 +347,6 @@ Zyborg.on("ready", () => {
           else return; //ignore overwriting updates
           //store voice time
           Users[readID].voiceTime = parseInt(line[1])
-          //advance voice type
-          recordType++
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom = line.replace(`${FROM}<#'`,'').replace(`${LEFT}<#'`,'').replace('>','')
