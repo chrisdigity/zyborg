@@ -321,7 +321,7 @@ Zyborg.on("ready", () => {
         else if(recordType == 1) { //presence read
           line = line.replace('<@',',').replace('> ',',').split(',')
           //store user id and check for existing user
-          readID = line[0]
+          readID = line[1]
           if(!Users.hasOwnProperty(readID))
             Users[readID] = new USER()
           else return; //ignore overwriting updates
