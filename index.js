@@ -229,15 +229,15 @@ const UPDATE_USER = function(userid, update, noedit) {
     let id = orderedUsers[i]
     let user = Users[id]
     let dateString = '*unknown date*'
+    if(user.presenceTime) {
+      dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
+      presenceContent += user.presenceType
+      presenceContent += `<@${id}> ${dateString}\n`
+    }
     if(user.voiceTime) {
       let moved = Boolean(user.voiceFrom && user.voiceTo)
       dateString = new Date(user.voiceTime+GMT10).toJSON().slice(0,16)
       voiceContent += `<@${id}> ${dateString}\n`
-      if(user.presenceTime) {
-        dateString = new Date(user.presenceTime+GMT10).toJSON().slice(0,16)
-        presenceContent += user.presenceType
-        presenceContent += `<@${id}> ${dateString}\n`
-      }
       if(user.voiceFrom) {
         voiceContent += moved ? 'from' : 'left'
         voiceContent += ` <#${user.voiceFrom}>\n`
