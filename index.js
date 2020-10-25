@@ -32,7 +32,7 @@ const TO = '*to* '
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
 const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
-const LINK_NCS = 'https://www.youtube.com/watch?v=cQKuD49zKvU' //new: https://www.youtube.com/watch?v=Ioo-5ihWo6M
+const LINK_NCS = 'https://www.youtube.com/watch?v=Ioo-5ihWo6M'
 const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
 
