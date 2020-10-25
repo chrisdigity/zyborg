@@ -1,9 +1,6 @@
 /* eslint-env node, es6 */
 /* eslint-disable no-console */
 
-/* sensitive data */
-require("dotenv").config()
-
 /* vars */
 //let Vcurr = 0
 const Users = {}
