@@ -30,7 +30,7 @@ const FROM = '*from* '
 const TO = '*to* '
 
 /* Youtube Music Links */
-const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=DLaV_7vwiN8'
+const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=N1FuK9KC1vc'
 const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 const LINK_NCS = 'https://www.youtube.com/watch?v=Ioo-5ihWo6M'
 const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
