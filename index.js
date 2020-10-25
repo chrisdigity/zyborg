@@ -422,8 +422,13 @@ Zyborg.on("guildMemberRemove", member => {
 })
 /* ...on presenceUpdate, log update appropriately */
 Zyborg.on("presenceUpdate", (old, cur) => {
+  //ignore ALL bot movements
+  let member = cur.member
+  if(member.user.bot)
+    return;
+  
   /* acquire presence data and log with a message */
-  let id = cur.member.id
+  let id = member.id
   let platform = Object.keys(cur.clientStatus)[0] || null
   switch(platform) {
     case 'desktop': platform = ':desktop:'; break;
@@ -433,7 +438,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
   }
   //create update object
   const update = {
-    name: cur.member.nickname || cur.member.user.username,
+    name: member.nickname || member.user.username,
     presenceType: platform,
     presenceTime: Date.now()
   }
@@ -442,11 +447,10 @@ Zyborg.on("presenceUpdate", (old, cur) => {
 })
 /* ...on voiceStateUpdate, log update appropriately */
 Zyborg.on("voiceStateUpdate", (old, cur) => {
-  //ignore bot movements
+  //ignore ALL bot movements
   let state = cur.channelID ? cur : old
   let member = state.member
-  let id = member.id
-  if(id == Zyborg.user.id)
+  if(member.user.bot)
     return;
   
    /* acquire voice data and action */
@@ -469,7 +473,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     voiceTime: Date.now()
   }
   //update user
-  UPDATE_USER(id, update)
+  UPDATE_USER(member.id, update)
 
   //queue extra action advise
   let name = `${member.nickname || member.user.username}`
