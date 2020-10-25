@@ -302,7 +302,7 @@ Zyborg.on("ready", () => {
       let readID = null
       messages.each(message => {
         if(message.author.id == Zyborg.user.id) {
-          MSGID_LASTSEEN.push(message.id)
+          MSGID_LASTSEEN.unshift(message.id)
           content += message.content + '\n'
         } else message.delete().catch(console.error)
       })
