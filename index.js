@@ -335,8 +335,6 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       content.split(/\r?\n/).forEach(line => {
-        //debug all lines
-        console.log(recordType,'~',line)
         //filter bogus lines
         if(!line || line.includes('_*break*'))
           return;
