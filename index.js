@@ -49,6 +49,7 @@ const CHIDS_NOINTRO = [
 
 /* USER object */
 const USER = function() {
+  this.name = '_'
   this.presenceTime = 0
   this.presenceType = ''
   this.voiceTime = 0
@@ -204,16 +205,22 @@ const QUEUE_ALERT = function(alert) {
     CHECK_ALERT()
 }
 
-const UPDATE_USER = function(userid, update) {
+const UPDATE_USER = function(userid, update, noedit) {
   //create new user, if necessary
   if(!Users.hasOwnProperty(userid))
     Users[userid] = new USER()
   //update userid with update object
   for(const param in update)
     Users[userid][param] = update[param]
+  
+  if(noedit)
+    return;
+  
   //sort Users by name
   let orderedUsers = []
-  Object.keys(Users).sort().forEach(key => orderedUsers.push(key))
+  Object.keys(Users).sort((a,b) => {
+    return ('' + a.name).localeCompare(b.name)
+  }).forEach(key => orderedUsers.push(key))
   //create message update
   let content = '```All times are in GMT+10```\n'
   let voiceContent = VOICE_IDENTIFIER + '\n'
@@ -295,43 +302,46 @@ Zyborg.on("ready", () => {
           MSGID_LASTSEEN.push(message.id)
         else message.delete().catch(error => BOT_ERROR(Zyborg, error))
       })
-    }).catch(error => BOT_ERROR(Zyborg, error)).finally(() => {
-      let i = 0
+    }).catch(console.error).finally(() => {
       let recordType = 0 // 1: presence user/data, 2: voice user, 3: voice data
-      while(i < MSGID_LASTSEEN.length) {
-        //read presence data
-        let update = { id: null, data: null }
-        channel.messages.fetch(MSGID_LASTSEEN).then(message => {
-          let content = message.content.split(/\r?\n/)
-          for (let line in content) {
-            if(line.includes(PRESENCE_IDENTIFIER))
-              recordType = 1
-            else if(line.includes(VOICE_IDENTIFIER))
-              recordType = 2
-            else if(recordType == 1) {
-              line = line.replace('<@',',').replace('> ',',').split(',')
-              UPDATE_USER(line[1], { presenceType: line[0], presenceTime: line[2] })
-            } else if(recordType == 2) {
-              line = line.replace('<@','').replace('> ',',').split(',')
-              //store voice name and time
-              update.id = line[0]
-              update.data = { voiceTime: line[1] }
-            } else if(recordType == 3) {
-              if(line.includes('*from* ')) {
-                update.data.voiceFrom = line.replace('*from* <@','').replace('>','')
-                continue; //should have another line of data for user
-              }
-              else if(line.includes('*to* ') || line.includes('*joined* '))
-                update.data.voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
-              else if(line.includes('*left* '))
-                update.data.voiceFrom = line.replace('*left* <@','').replace('>','')
-              UPDATE_USER(update.id, update.data)
+      let update = { id: null, data: null }
+      //read presence data
+      channel.messages.fetch(MSGID_LASTSEEN).then(message => {
+        let content = message.content.split(/\r?\n/)
+        for (let line in content) {
+          if(line.includes(PRESENCE_IDENTIFIER))
+            recordType = 1
+          else if(line.includes(VOICE_IDENTIFIER))
+            recordType = 2
+          else if(recordType == 1) {
+            line = line.replace('<@',',').replace('> ',',').split(',')
+            UPDATE_USER(line[1], { presenceType: line[0], presenceTime: line[2] }, true)
+          } else if(recordType == 2) {
+            line = line.replace('<@','').replace('> ',',').split(',')
+            //store voice name and time
+            update.id = line[0]
+            update.data = { voiceTime: line[1] }
+          } else if(recordType == 3) {
+            if(line.includes('*from* ')) {
+              update.data.voiceFrom = line.replace('*from* <@','').replace('>','')
+              continue; //should have another line of data for user
             }
+            else if(line.includes('*to* ') || line.includes('*joined* '))
+              update.data.voiceTo = line.replace('*to* <@','').replace('*joined* <@','').replace('>','')
+            else if(line.includes('*left* '))
+              update.data.voiceFrom = line.replace('*left* <@','').replace('>','')
+            UPDATE_USER(update.id, update.data, true)
           }
-        }).catch(error => BOT_ERROR(Zyborg, error))
-      }
+        }
+        //update names of users
+        Object.keys(Users).forEach(userid => {
+          channel.guild.members.fetch(userid).then(member => {
+            Users[userid].name = member.nickname || member.user.username;
+          }).catch(console.error)
+        })
+      }).catch(console.error)
     })
-  }).catch(error => BOT_ERROR(Zyborg, error))
+  }).catch(console.error)
   //clear spam channel
   CLEAR_SPAM(Zyborg)
 })
