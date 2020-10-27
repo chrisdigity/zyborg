@@ -3,8 +3,8 @@
 
 /* required modules */
 const YTDL = require("ytdl-core")
-const Discord = require("discord.js")
 const DiscordTTS = require("discord-tts")
+const { Client, Intents } = require("discord.js")
 const { spawn } = require("child_process")
 
 /* vars */
@@ -82,7 +82,7 @@ const USER = function() {
 const YTMusic = function(n, id, src) {
   // make 'this' reliably accessible
   const _self = this
-  const _intents = ['GUILDS', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES']
+  
   // define options and parameters
   _self.name = n
   _self.chid = id
@@ -90,7 +90,7 @@ const YTMusic = function(n, id, src) {
   _self.conn = null
   _self.count = 0
   // define the client
-  _self.client = new Discord.Client({ ws: { intents: _intents } })
+  _self.client = new Client({ ws: { intents: Intents.ALL } })
   
   // setup events for the client...
   /* ...on ready, log event and post stream link */
@@ -155,13 +155,8 @@ const YTMusic = function(n, id, src) {
  * BOT INITIALIZATION *
  **********************/
 
-const INTENTS = [
-  'GUILD_MEMBERS', 
-  'GUILD_VOICE_STATES', 
-  'GUILD_PRESENCES', 
-  'GUILD_MESSAGES'
-]
-const Zyborg = new Discord.Client({ ws: { intents: INTENTS } })
+
+const Zyborg = new Client({ ws: { intents: Intents.ALL } })
 const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
 const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
