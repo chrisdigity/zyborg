@@ -155,7 +155,13 @@ const YTMusic = function(n, id, src) {
  * BOT INITIALIZATION *
  **********************/
 
-const Zyborg = new Discord.Client()
+const INTENTS = [
+  'GUILD_MEMBERS', 
+  'GUILD_VOICE_STATES', 
+  'GUILD_PRESENCES', 
+  'GUILD_MESSAGES'
+]
+const Zyborg = new Discord.Client({ ws: { intents: INTENTS } })
 const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
 const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
 const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
