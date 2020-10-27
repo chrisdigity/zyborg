@@ -235,6 +235,8 @@ const QUEUE_ALERT = function(alert) {
 }
 
 const UPDATE_USER = function(userid, update) {
+  //debug
+  console.log(userid, update)
   //create new user, if necessary
   if(!Users.hasOwnProperty(userid))
     Users[userid] = new USER()
@@ -354,7 +356,8 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store presence data
-          Users[readID].presenceTime = Date.parse(line[2])
+          Users[readID].presenceTime =
+            '' + Date.parse(line[2]) + (GMT<0?'':'+') + GMT + ':00'
           Users[readID].presenceType = line[0]
         } else if(recordType == 2) { //voice read
           //advance voice type
@@ -367,7 +370,8 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store voice time
-          Users[readID].voiceTime = Date.parse(line[1])
+          Users[readID].voiceTime =
+            '' + Date.parse(line[1]) + (GMT<0?'':'+') + GMT + ':00'
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom = line.replace(`${FROM}<#'`,'').replace(`${LEFT}<#'`,'').replace('>','')
