@@ -82,7 +82,7 @@ const USER = function() {
 const YTMusic = function(n, id, src) {
   // make 'this' reliably accessible
   const _self = this
-  const _intents = ['GUILD', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES']
+  const _intents = ['GUILDS', 'GUILD_MEMBERS', 'GUILD_VOICE_STATES']
   // define options and parameters
   _self.name = n
   _self.chid = id
