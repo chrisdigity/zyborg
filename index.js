@@ -21,8 +21,8 @@ let UPDATE_OK = false
  **********************/
 
 /* CONSTANTS */
+const GMT = 10
 const VOLUME = 0.1
-const TIMEZONE = 1000*60*60*10
 const MSG_SPLIT_LENGTH = 1986
 const MSG_SPLIT_SEP = '_*break*'
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
@@ -60,6 +60,13 @@ const CHIDS_NOINTRO = [
  * END USER CONFIGURATION *
  **************************/
 
+const HEROKU_RESTART = function() {
+  spawn("heroku restart")
+}
+
+const BOT_ERROR = function(BOT, error) {
+  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send('BOT_ERROR():\n'+error).catch(console.error))
+}
 
 /* USER object */
 const USER = function() {
@@ -69,14 +76,6 @@ const USER = function() {
   this.voiceTime = 0
   this.voiceFrom = null
   this.voiceTo = null
-}
-
-const HEROKU_RESTART = function() {
-  spawn("heroku restart")
-}
-
-const BOT_ERROR = function(BOT, error) {
-  BOT.channels.fetch(CHID_SPAM).then(channel => channel.send('BOT_ERROR():\n'+error).catch(console.error))
 }
 
 /* YTMusic constructor */
@@ -252,7 +251,7 @@ const UPDATE_USER = function(userid, update) {
     return ('' + a.name).localeCompare(b.name)
   }).forEach(key => orderedUsers.push(key))
   //create message update
-  let content = '```All times are in GMT+10```\n'
+  let content = '```Time Format: GMT' + (GMT<0?'':'+') + GMT + '```\n'
   let voiceContent = VOICE_IDENTIFIER + '\n'
   let presenceContent = PRESENCE_IDENTIFIER + '\n'
   for(let i = 0; i < orderedUsers.length; i++) {
@@ -260,13 +259,13 @@ const UPDATE_USER = function(userid, update) {
     let user = Users[id]
     let dateString = ''
     if(user.presenceTime) {
-      dateString = new Date(user.presenceTime + TIMEZONE).toJSON().slice(0,16)
+      dateString = new Date(user.presenceTime + (GMT*60*60*1000)).toJSON().slice(0,16)
       presenceContent += user.presenceType
       presenceContent += `<@${id}> ${dateString}\n`
     }
     if(user.voiceTime) {
       let moved = Boolean(user.voiceFrom && user.voiceTo)
-      dateString = new Date(user.voiceTime + TIMEZONE).toJSON().slice(0,16)
+      dateString = new Date(user.voiceTime + (GMT*60*60*1000)).toJSON().slice(0,16)
       voiceContent += `<@${id}> ${dateString}\n`
       if(user.voiceFrom) {
         voiceContent += moved ? FROM : LEFT
@@ -355,7 +354,7 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store presence data
-          Users[readID].presenceTime = parseInt(line[2])
+          Users[readID].presenceTime = Date.parse(line[2])
           Users[readID].presenceType = line[0]
         } else if(recordType == 2) { //voice read
           //advance voice type
@@ -368,7 +367,7 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store voice time
-          Users[readID].voiceTime = parseInt(line[1])
+          Users[readID].voiceTime = Date.parse(line[1])
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom = line.replace(`${FROM}<#'`,'').replace(`${LEFT}<#'`,'').replace('>','')
