@@ -236,8 +236,6 @@ const QUEUE_ALERT = function(alert) {
 }
 
 const UPDATE_USER = function(userid, update) {
-  //debug
-  console.log(userid, update)
   //create new user, if necessary
   if(!Users.hasOwnProperty(userid))
     Users[userid] = new USER()
@@ -339,8 +337,6 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       content.split(/\r?\n/).forEach(line => {
-        //debug
-        console.log(recordType, '~', line)
         //filter bogus lines
         if(!line || line.includes(MSG_SPLIT_SEP))
           return;
