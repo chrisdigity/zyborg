@@ -90,7 +90,7 @@ const YTMusic = function(n, id, src) {
   _self.conn = null
   _self.count = 0
   // define the client
-  _self.client = new Discord.Client()
+  _self.client = new Discord.Client({ ws: { intents: ['GUILD_VOICE_STATES'] } })
   
   // setup events for the client...
   /* ...on ready, log event and post stream link */
