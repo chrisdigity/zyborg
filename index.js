@@ -355,7 +355,6 @@ Zyborg.on("ready", () => {
           readID = line[1]
           if(!Users.hasOwnProperty(readID))
             Users[readID] = new USER()
-          else return; //ignore overwriting updates
           //store presence data
           Users[readID].presenceTime = Date.parse(line[2]+ (GMT<0?'':'+') + GMT + ':00') 
           Users[readID].presenceType = line[0]
@@ -368,7 +367,6 @@ Zyborg.on("ready", () => {
           readID = line[0]
           if(!Users.hasOwnProperty(readID))
             Users[readID] = new USER()
-          else return; //ignore overwriting updates
           //store voice time
           Users[readID].voiceTime = Date.parse(line[1] + (GMT<0?'':'+') + GMT + ':00')
         } else if(recordType == 3) { //voice read extended
