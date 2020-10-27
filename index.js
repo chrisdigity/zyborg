@@ -24,7 +24,7 @@ let UPDATE_OK = false
 const VOLUME = 0.1
 const TIMEZONE = 1000*60*60*10
 const MSG_SPLIT_LENGTH = 1986
-const MSG_SPLIT_SEP = '\n_*break*'
+const MSG_SPLIT_SEP = '_*break*'
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
 const PRESENCE_IDENTIFIER = '**#_Presence_GMT+10**'
 const JOINED = '*joined* '
@@ -258,7 +258,7 @@ const UPDATE_USER = function(userid, update) {
   for(let i = 0; i < orderedUsers.length; i++) {
     let id = orderedUsers[i]
     let user = Users[id]
-    let dateString = '*unknown date*'
+    let dateString = ''
     if(user.presenceTime) {
       dateString = new Date(user.presenceTime + TIMEZONE).toJSON().slice(0,16)
       presenceContent += user.presenceType
@@ -292,7 +292,7 @@ const UPDATE_USER = function(userid, update) {
       else contentPart = content.trimEnd()
       content = content.substr(splitIndex + 1)
       // append partial message separator
-      contentPart += MSG_SPLIT_SEP
+      contentPart += '\n' + MSG_SPLIT_SEP
       // handle partial message
       if(i < MSGID_LASTSEEN.length) {
         // edit MSGID_LASTSEEN[i] content
@@ -337,6 +337,8 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       content.split(/\r?\n/).forEach(line => {
+        //debug
+        console.log(recordType, '~', line)
         //filter bogus lines
         if(!line || line.includes('_*break*'))
           return;
