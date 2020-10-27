@@ -341,7 +341,7 @@ Zyborg.on("ready", () => {
         //debug
         console.log(recordType, '~', line)
         //filter bogus lines
-        if(!line || line.includes('_*break*'))
+        if(!line || line.includes(MSG_SPLIT_SEP))
           return;
         //decipher...
         if(line.includes(PRESENCE_IDENTIFIER))
@@ -356,8 +356,7 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store presence data
-          Users[readID].presenceTime =
-            '' + Date.parse(line[2]) + (GMT<0?'':'+') + GMT + ':00'
+          Users[readID].presenceTime = Date.parse(line[2]+ (GMT<0?'':'+') + GMT + ':00') 
           Users[readID].presenceType = line[0]
         } else if(recordType == 2) { //voice read
           //advance voice type
@@ -370,8 +369,7 @@ Zyborg.on("ready", () => {
             Users[readID] = new USER()
           else return; //ignore overwriting updates
           //store voice time
-          Users[readID].voiceTime =
-            '' + Date.parse(line[1]) + (GMT<0?'':'+') + GMT + ':00'
+          Users[readID].voiceTime = Date.parse(line[1] + (GMT<0?'':'+') + GMT + ':00')
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom = line.replace(`${FROM}<#'`,'').replace(`${LEFT}<#'`,'').replace('>','')
@@ -429,6 +427,8 @@ Zyborg.on("guildMemberRemove", member => {
 })
 /* ...on presenceUpdate, log update appropriately */
 Zyborg.on("presenceUpdate", (old, cur) => {
+  //debug
+  
   //ignore ALL bot movements
   let member = cur.member
   if(member.user.bot)
