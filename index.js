@@ -82,7 +82,7 @@ const USER = function() {
 const YTMusic = function(n, id, src) {
   // make 'this' reliably accessible
   const _self = this
-  
+  const _intents = ['GUILD_VOICE_STATES', 'GUILD_MEMBERS']
   // define options and parameters
   _self.name = n
   _self.chid = id
@@ -90,7 +90,7 @@ const YTMusic = function(n, id, src) {
   _self.conn = null
   _self.count = 0
   // define the client
-  _self.client = new Discord.Client({ ws: { intents: ['GUILD_VOICE_STATES'] } })
+  _self.client = new Discord.Client({ ws: { intents: _intents } })
   
   // setup events for the client...
   /* ...on ready, log event and post stream link */
