@@ -81,6 +81,7 @@ const YTMusic = function(n, id, src) {
   // error strings
   const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
   const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
+  const STREAM_URL_ERROR = 'TypeError [ERR_INVALID_ARG_TYPE]: input stream: The "url" argument must be of type string. Received undefined'
   const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
 
   // make 'this' reliably accessible
@@ -100,7 +101,8 @@ const YTMusic = function(n, id, src) {
       YTDL(_self.source, {quality:'highestaudio'}), {volume: VOLUME}
     ).on("error", error => {
       // standard errors
-      if(error == STREAM_COOKIE_ERROR) {
+      if(error == STREAM_COOKIE_ERROR || error == STREAM_URL_ERROR) {
+        BOT_ERROR(_self.client, error)
         playYT(connection)
         return;
       }
