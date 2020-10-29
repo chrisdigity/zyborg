@@ -137,10 +137,10 @@ const YTMusic = function(n, id, src) {
   _self.client.on("voiceStateUpdate", (old, cur) => {
     if(old.channelID != _self.chid && cur.channelID == _self.chid)
     {
-      const channel = cur.member.voice.channel
       // user joined Chillstep ++increment count and join
       if(++_self.count >= 1)
-        channel.join().then(playYT).catch(error => BOT_ERROR(_self.client, error))
+        cur.member.voice.channel.join()
+          .then(playYT).catch(error => BOT_ERROR(_self.client, error))
     }
     else if(old.channelID == _self.chid && cur.channelID != _self.chid)
     {
