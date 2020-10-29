@@ -471,7 +471,6 @@ Zyborg.on("presenceUpdate", (old, cur) => {
   }
   //create update object
   const update = {
-    name: member.nickname || member.user.username,
     presenceType: platform,
     presenceTime: Date.now()
   }
@@ -500,7 +499,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //create update object
   const update = {
-    name: member.nickname || member.user.username,
     voiceFrom: old.channelID,
     voiceTo: cur.channelID,
     voiceTime: Date.now()
