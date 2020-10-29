@@ -265,40 +265,52 @@ const UPDATE_USER = function(userid, update) {
   if(!UPDATE_OK)
     return;
   
-  //sort Users by name
+  let id = null
+  let user = null
+  let dateString = ''
   let orderedUsers = []
-  Object.keys(Users).sort((a,b) => {
-    return ('' + a.name).localeCompare(b.name)
-  }).forEach(key => orderedUsers.push(key))
   //create message update
   let content = '```Time Format: GMT' + (GMT<0?'':'+') + GMT + '```\n'
-  let voiceContent = VOICE_IDENTIFIER + '\n'
-  let presenceContent = PRESENCE_IDENTIFIER + '\n'
+  //sort Users by presence time
+  Object.keys(Users).sort((a,b) => {
+    return a.presenceTime - b.presenceTime
+  }).forEach(key => orderedUsers.push(key))
+  //include presence in content
+  content += PRESENCE_IDENTIFIER + '\n'
   for(let i = 0; i < orderedUsers.length; i++) {
-    let id = orderedUsers[i]
-    let user = Users[id]
-    let dateString = ''
+    id = orderedUsers[i]
+    user = Users[id]
     if(user.presenceTime) {
       dateString = new Date(user.presenceTime + (GMT*60*60*1000)).toJSON().slice(0,16)
-      presenceContent += user.presenceType
-      presenceContent += `<@${id}> ${dateString}\n`
+      content += user.presenceType
+      content += `<@${id}> ${dateString}\n`
     }
+  }
+  content += '\n'
+  //sort Users by presence time
+  orderedUsers = []
+  Object.keys(Users).sort((a,b) => {
+    return a.voiceTime - b.voiceTime
+  }).forEach(key => orderedUsers.push(key))
+  //include voice in content
+  content = VOICE_IDENTIFIER + '\n'
+  for(let i = 0; i < orderedUsers.length; i++) {
+    id = orderedUsers[i]
+    user = Users[id]
     if(user.voiceTime) {
       let moved = Boolean(user.voiceFrom && user.voiceTo)
       dateString = new Date(user.voiceTime + (GMT*60*60*1000)).toJSON().slice(0,16)
-      voiceContent += `<@${id}> ${dateString}\n`
+      content += `<@${id}> ${dateString}\n`
       if(user.voiceFrom) {
-        voiceContent += moved ? FROM : LEFT
-        voiceContent += `<#${user.voiceFrom}>\n`
+        content += moved ? FROM : LEFT
+        content += `<#${user.voiceFrom}>\n`
       }
       if(user.voiceTo) {
-        voiceContent += moved ? TO : JOINED
-        voiceContent += `<#${user.voiceTo}>\n`
+        content += moved ? TO : JOINED
+        content += `<#${user.voiceTo}>\n`
       }
     }
   }
-  //append presence and voice content
-  content = content + presenceContent + '\n' + voiceContent
   //update message content
   Zyborg.channels.fetch(CHID_LASTSEEN).then(channel => {
     let i = 0
