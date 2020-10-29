@@ -360,7 +360,6 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       content.split(/\r?\n/).forEach(line => {
-        console.log(recordType, '~', line)
         //filter bogus lines
         if(!line || line.includes(MSG_SPLIT_SEP))
           return;
@@ -393,22 +392,14 @@ Zyborg.on("ready", () => {
           if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom =
               line.replace(regFrom, '').replace(regLeft, '').replace('>','')
-            console.log(Users[readID].voiceFrom)
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
             Users[readID].voiceTo =
               line.replace(regTo, '').replace(regJoined, '').replace('>','')
-            console.log(Users[readID].voiceTo)
           //return former voice type
           recordType--
         }
-      })
-      //update names of users
-      Object.keys(Users).forEach(userid => {
-        channel.guild.members.fetch(userid).then(member => {
-          Users[userid].name = member.nickname || member.user.username;
-        }).catch(console.error)
       })
       //set UPDATE)OK
       UPDATE_OK = true
