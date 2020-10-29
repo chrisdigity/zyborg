@@ -393,11 +393,13 @@ Zyborg.on("ready", () => {
           if(line.includes(FROM) || line.includes(LEFT)) {
             Users[readID].voiceFrom =
               line.replace(regFrom, '').replace(regLeft, '').replace('>','')
+            console.log(Users[readID].voiceFrom)
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
             Users[readID].voiceTo =
               line.replace(regTo, '').replace(regJoined, '').replace('>','')
+            console.log(Users[readID].voiceTo)
           //return former voice type
           recordType--
         }
