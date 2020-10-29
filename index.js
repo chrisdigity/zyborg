@@ -346,6 +346,10 @@ Zyborg.on("ready", () => {
   //obtain presence message id
   Zyborg.channels.fetch(CHID_LASTSEEN).then(channel => {
     channel.messages.fetch().then(messages => {
+      const regFrom = new RegExp(escapeRegExp(`${FROM}<#`), 'g')
+      const regTo = new RegExp(escapeRegExp(`${TO}<#`), 'g')
+      const regLeft = new RegExp(escapeRegExp(`${LEFT}<#`), 'g')
+      const regJoined = new RegExp(escapeRegExp(`${JOINED}<#`), 'g')
       let content = ''
       let recordType = 0 // 1: presence user/data, 2: voice user, 3: voice data
       let readID = null
@@ -387,15 +391,13 @@ Zyborg.on("ready", () => {
           Users[readID].voiceTime = Date.parse(line[1] + (GMT<0?'':'+') + GMT + ':00')
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
-            line = line.replace(new RegExp(escapeRegExp(`${FROM}<#`), 'g'),'')
-            line = line.replace(new RegExp(escapeRegExp(`${LEFT}<#`), 'g'),'')
-            Users[readID].voiceFrom = line.replace('>','')
+            Users[readID].voiceFrom =
+              line.replace(regFrom, '').replace(regLeft, '').replace('>','')
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
-            line = line.replace(new RegExp(escapeRegExp(`${TO}<#`), 'g'),'')
-            line = line.replace(new RegExp(escapeRegExp(`${JOINED}<#`), 'g'),'')
-            Users[readID].voiceTo = line.replace('>','')
+            Users[readID].voiceTo =
+              line.replace(regTo, '').replace(regJoined, '').replace('>','')
           //return former voice type
           recordType--
         }
