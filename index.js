@@ -293,7 +293,7 @@ const UPDATE_USER = function(userid, update) {
     return a.voiceTime - b.voiceTime
   }).forEach(key => orderedUsers.push(key))
   //include voice in content
-  content = VOICE_IDENTIFIER + '\n'
+  content += VOICE_IDENTIFIER + '\n'
   for(let i = 0; i < orderedUsers.length; i++) {
     id = orderedUsers[i]
     user = Users[id]
