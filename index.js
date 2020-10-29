@@ -356,6 +356,7 @@ Zyborg.on("ready", () => {
         } else message.delete().catch(console.error)
       })
       content.split(/\r?\n/).forEach(line => {
+        console.log(recordType, '~', line)
         //filter bogus lines
         if(!line || line.includes(MSG_SPLIT_SEP))
           return;
@@ -389,7 +390,6 @@ Zyborg.on("ready", () => {
             line = line.replace(new RegExp(escapeRegExp(`${FROM}<#`), 'g'),'')
             line = line.replace(new RegExp(escapeRegExp(`${LEFT}<#`), 'g'),'')
             Users[readID].voiceFrom = line.replace('>','')
-            console.log(line, '~', Users[readID].voiceFrom)
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
