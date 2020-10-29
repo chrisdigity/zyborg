@@ -58,6 +58,10 @@ const CHIDS_NOINTRO = [
  * END USER CONFIGURATION *
  **************************/
 
+const escapeRegExp = (string) => {
+  return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
 const HEROKU_RESTART = function() {
   spawn("heroku restart")
 }
@@ -382,15 +386,15 @@ Zyborg.on("ready", () => {
           Users[readID].voiceTime = Date.parse(line[1] + (GMT<0?'':'+') + GMT + ':00')
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
-            line = line.replace(new RegExp(`${FROM}<#`, 'g'))
-            line = line.replace(new RegExp(`${LEFT}<#`, 'g'))
+            line = line.replace(new RegExp(escapeRegExp(`${FROM}<#`), 'g'))
+            line = line.replace(new RegExp(escapeRegExp(`${LEFT}<#`), 'g'))
             Users[readID].voiceFrom = line.replace('>','')
             console.log(line, '~', Users[readID].voiceFrom)
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
-            line = line.replace(new RegExp(`${TO}<#`, 'g'))
-            line = line.replace(new RegExp(`${JOINED}<#`, 'g'))
+            line = line.replace(new RegExp(escapeRegExp(`${TO}<#`), 'g'))
+            line = line.replace(new RegExp(escapeRegExp(`${JOINED}<#`), 'g'))
             Users[readID].voiceTo = line.replace('>','')
           //return former voice type
           recordType--
