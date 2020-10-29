@@ -37,8 +37,6 @@ const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=N1FuK9KC1vc'
 const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
 const LINK_NCS = 'https://www.youtube.com/watch?v=Ioo-5ihWo6M'
 const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
-const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
-const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
 
 /* Role IDs */
 const RID_ADMIN = '694657068220809287'
@@ -80,6 +78,11 @@ const USER = function() {
 
 /* YTMusic constructor */
 const YTMusic = function(n, id, src) {
+  // error strings
+  const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
+  const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
+  const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
+
   // make 'this' reliably accessible
   const _self = this
   
@@ -89,39 +92,49 @@ const YTMusic = function(n, id, src) {
   _self.source = src
   _self.conn = null
   _self.count = 0
+  
+  // standard methods
+  const playYT = connection => {
+     _self.conn = connection
+    connection.play(
+      YTDL(_self.source, {quality:'highestaudio'}), {volume: VOLUME}
+    ).on("error", error => {
+      // standard errors
+      if(error == STREAM_COOKIE_ERROR) {
+        playYT(connection)
+        return;
+      }
+      if(error == STREAM_ENDED_ERROR)
+        BOT_ERROR(_self.client, `${STREAM_ENDED_ERROR}\n*<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.*`)
+      else if(error == STREAM_REQUESTS_ERROR) {
+        BOT_ERROR(_self.client, `*${STREAM_REQUESTS_ERROR}\n*Attempting server switch. Please wait...*`)
+        setTimeout(HEROKU_RESTART, 1000)
+      } else BOT_ERROR(_self.client, error)
+      connection.disconnect()
+      _self.conn = null
+    })
+  }
+  
   // define the client
   _self.client = new Client({ ws: { intents: Intents.ALL } })
   
   // setup events for the client...
-  /* ...on ready, log event and post stream link */
+  /* ...on ready, log event and join if members waiting */
   _self.client.on("ready", () => {
     console.log(`${_self.client.user.tag} is ready...`)
+    _self.client.channels.fetch(_self.chid).then(channel => {
+      if(channel.members.array().length >= 1)
+        channel.join().then(playYT).catch(error => BOT_ERROR(_self.client, error))
+    }).catch(error => BOT_ERROR(_self.client, error))
   })
   /* ...on voiceStateUpdate, check user joined before starting */
   _self.client.on("voiceStateUpdate", (old, cur) => {
     if(old.channelID != _self.chid && cur.channelID == _self.chid)
     {
-      // user joined Chillstep ++increment count
-      if(++_self.count == 1) {
-        // start chillstep bot
-        cur.member.voice.channel.join().then(connection => {
-          _self.conn = connection
-          connection.play(
-            YTDL(_self.source, {quality:'highestaudio'}),
-            {volume: VOLUME}
-          ).on("error", error => {
-            //standard errors
-            if(error == STREAM_ENDED_ERROR)
-              BOT_ERROR(_self.client, `*${STREAM_ENDED_ERROR}*\n<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.`)
-            else if(error == STREAM_REQUESTS_ERROR) {
-              BOT_ERROR(_self.client, `*${STREAM_REQUESTS_ERROR}, attempting server switch...*\n<@${cur.member.id}>, please try again once this message dissappears.>`)
-              setTimeout(HEROKU_RESTART, 1000)
-            } else BOT_ERROR(_self.client, error)
-            connection.disconnect()
-            _self.conn = null
-          })
-        }).catch(error => BOT_ERROR(_self.client, error))
-      }
+      const channel = cur.member.voice.channel
+      // user joined Chillstep ++increment count and join
+      if(++_self.count >= 1)
+        channel.join().then(playYT).catch(error => BOT_ERROR(_self.client, error))
     }
     else if(old.channelID == _self.chid && cur.channelID != _self.chid)
     {
