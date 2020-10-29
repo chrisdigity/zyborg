@@ -100,7 +100,6 @@ const YTMusic = function(n, id, src) {
   
   // standard methods
   const playYT = connection => {
-     _self.conn = connection
     connection.play(
       YTDL(_self.source, {quality:'highestaudio'}), {volume: VOLUME}
     ).on("error", error => {
