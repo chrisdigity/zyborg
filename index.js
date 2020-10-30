@@ -258,7 +258,11 @@ const PLAY_NEXT_ALERT = connection => {
     const stream = new Stream.PassThrough()
     GoogleTTS(alert.text, alert.lang, 1).then(url => {
       HTTPS.get(url, res => res.pipe(stream))
-    }).catch(error => BOT_ERROR(Zyborg, error))
+    }).catch(error => {
+      AlertQueue[0].alert.push(alert)
+      BOT_ERROR(Zyborg, error)
+      stream.end()
+    })
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
