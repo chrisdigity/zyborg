@@ -252,9 +252,6 @@ const CLEAR_SPAM = function(BOT) {
 const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
-    //debug
-    console.log('PLAY_NEXT_ALERT() =>', alert)
-    
     const stream = new Stream.PassThrough()
     GoogleTTS(alert.text, alert.lang, 1).then(url => {
       HTTPS.get(url, res => res.pipe(stream))
