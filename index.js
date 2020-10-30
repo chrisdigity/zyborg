@@ -104,6 +104,12 @@ const YTMusic = function(n, id, src) {
       YTDL(_self.source, {quality:'highestaudio'}), {volume: VOLUME}
     ).on("error", error => {
       // standard errors
+      /*
+      if(error == STREAM_COOKIE_ERROR || error == STREAM_URL_ERROR) {
+        BOT_ERROR(_self.client, error)
+        playYT(connection)
+        return;
+      }*/
       if(error == STREAM_ENDED_ERROR)
         BOT_ERROR(_self.client, `${STREAM_ENDED_ERROR}\n*<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.*`)
       else if(error == STREAM_REQUESTS_ERROR) {

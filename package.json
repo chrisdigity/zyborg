@@ -6,11 +6,10 @@
       "start": "node index.js"
    },
    "dependencies": {
-      "dotenv": "^8.2.0",
-      "ytdl-core": "^3.3.0",
-      "discord.js": "^12.2.0",
-      "discord-tts": "^1.0.1",
-      "@discordjs/opus": "^0.3.2",
-      "sodium": "^3.0.2"
+      "ytdl-core": "~4.0.0",
+      "discord.js": "~12.4.1",
+      "discord-tts": "~1.0.1",
+      "@discordjs/opus": "~0.3.3",
+      "sodium": "~3.0.2"
    }
 }
