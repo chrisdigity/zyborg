@@ -101,10 +101,11 @@ const YTMusic = function(n, id, src) {
   _self.client = new Client({ ws: { intents: Intents.ALL } })
   
   // error strings
-  const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
-  const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
   const STREAM_URL_ERROR = 'TypeError [ERR_INVALID_ARG_TYPE]: input stream: The "url" argument must be of type string. Received undefined'
+  const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
+  const STREAM_METADATA_ERROR = 'Error: input stream: Error parsing info: Unable to retrieve video metadata'
   const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
+  const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
   
   // standard methods
   const playYT = connection => {
@@ -120,7 +121,8 @@ const YTMusic = function(n, id, src) {
     _self.dispatcher.on("finish", _self.disconnect)
     _self.dispatcher.on("error", error => {
       // recoverable errors
-      if(error == STREAM_COOKIE_ERROR || error == STREAM_URL_ERROR) {
+      if(error == STREAM_URL_ERROR || error == STREAM_COOKIE_ERROR ||
+         error == STREAM_METADATA_ERROR) {
         BOT_ERROR(_self.client, error)
         _self.rejoin = true
       }
