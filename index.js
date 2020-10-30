@@ -277,9 +277,12 @@ const CHECK_ALERTS = () => {
 
 /* Zyborg function to queue next alert */
 const QUEUE_ALERT = function(next) {
+  //debug
+  console.log(next)
   // ignore NOINTRO channels
   if(CHIDS_NOINTRO.includes(next.chid))
     return;
+  console.log('ACCEPTED')
   // scan queue to stack alerts, otherwise append...
   let i = 0
   for( ; i < AlertQueue.length; i++) {
