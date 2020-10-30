@@ -182,7 +182,7 @@ const YTMusic = function(n, id, src) {
         _self.disconnect()
     }
     // all other user movements
-    if(joining) {
+    else if(joining) {
       // user joined Chillstep ++increment count and join
       if(++_self.count > 0)
         cur.member.voice.channel.join()
