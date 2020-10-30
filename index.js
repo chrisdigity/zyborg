@@ -58,7 +58,7 @@ const CHIDS_NOINTRO = [
  * END USER CONFIGURATION *
  **************************/
 
-String.prototype.toGlobalRegExp = () => {
+String.prototype.toGlobalRegExp = function() {
   /* fix special characters in provided string
    * ... $& means the whole matched string */
   return new RegExp(this.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'), 'g')
