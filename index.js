@@ -270,8 +270,7 @@ const PLAY_NEXT_ALERT = connection => {
 
 /* Zyborg function to check/play next alert */
 const CHECK_ALERTS = () => {
-  let connections = Zyborg.voice.connections
-  if(!connections.array().length && AlertQueue.length) {
+  if(!Zyborg.voice.connections.array().length && AlertQueue.length) {
     Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
       channel.join().then(PLAY_NEXT_ALERT).catch(error => {
         BOT_ERROR(Zyborg, error)
