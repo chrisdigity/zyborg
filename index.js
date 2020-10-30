@@ -2,10 +2,12 @@
 /* eslint-disable no-console */
 
 /* required modules */
+const HTTPS = require("https");
+const Stream = require("stream");
 const YTDL = require("ytdl-core")
-const DiscordTTS = require("discord-tts")
+const GoogleTTS = require('google-tts-api')
 const { Client, Intents } = require("discord.js")
-const { spawn } = require("child_process")
+const { Spawn } = require("child_process")
 
 /* vars */
 //let Vcurr = 0
@@ -65,7 +67,7 @@ String.prototype.toGlobalRegExp = function() {
 }
 
 const HEROKU_RESTART = function() {
-  spawn("heroku restart")
+  Spawn("heroku restart")
 }
 
 const BOT_ERROR = function(BOT, error) {
@@ -254,9 +256,13 @@ const PLAY_NEXT_ALERT = connection => {
   
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
-    Vconnection.play(
-      DiscordTTS.getVoiceStream(alert.text, alert.lang)
-    ).on("finish", PLAY_NEXT_ALERT)
+    const stream = new Stream.PassThrough()
+    GoogleTTS(alert.text, alert.lang, 1).then(url => {
+      HTTPS.get(url, res => res.pipe(stream))
+    }).catch(error => BOT_ERROR(Zyborg, error))
+    const dispatcher = Vconnection.play(stream)
+    dispatcher.on("finish", PLAY_NEXT_ALERT)
+    dispatcher.on("error", PLAY_NEXT_ALERT)
   } else CHECK_ALERTS()
 }
 
@@ -546,6 +552,22 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   //queue extra action advise
   const name = `${member.nickname || member.user.username}`
   const next = { chid: null, alert: [{ text: '', lang: 'en-AU' }] }
+/**
+ * Acceptable languages...
+ *  "af-ZA"|"am-ET"|"hy-AM"|"az-AZ"|"id-ID"|"ms-MY"|"bn-BD"|"bn-IN"|"ca-ES"|
+ *  "cs-CZ"|"da-DK"|"de-DE"|"en-AU"|"en-CA"|"en-GH"|"en-GB"|"en-IN"|"en-IE"|
+ *  "en-KE"|"en-NZ"|"en-NG"|"en-PH"|"en-SG"|"en-ZA"|"en-TZ"|"en-US"|"es-AR"|
+ *  "es-BO"|"es-CL"|"es-CO"|"es-CR"|"es-EC"|"es-SV"|"es-ES"|"es-US"|"es-GT"|
+ *  "es-HN"|"es-MX"|"es-NI"|"es-PA"|"es-PY"|"es-PE"|"es-PR"|"es-DO"|"es-UY"|
+ *  "es-VE"|"eu-ES"|"fil-PH"|"fr-CA"|"fr-FR"|"gl-ES"|"ka-GE"|"gu-IN"|"hr-HR"|
+ *  "zu-ZA"|"is-IS"|"it-IT"|"jv-ID"|"kn-IN"|"km-KH"|"lo-LA"|"lv-LV"|"lt-LT"|
+ *  "hu-HU"|"ml-IN"|"mr-IN"|"nl-NL"|"ne-NP"|"nb-NO"|"pl-PL"|"pt-BR"|"pt-PT"|
+ *  "ro-RO"|"si-LK"|"sk-SK"|"sl-SI"|"su-ID"|"sw-TZ"|"sw-KE"|"fi-FI"|"sv-SE"|
+ *  "ta-IN"|"ta-SG"|"ta-LK"|"ta-MY"|"te-IN"|"vi-VN"|"tr-TR"|"ur-PK"|"ur-IN"|
+ *  "el-GR"|"bg-BG"|"ru-RU"|"sr-RS"|"uk-UA"|"he-IL"|"ar-IL"|"ar-JO"|"ar-AE"|
+ *  "ar-BH"|"ar-DZ"|"ar-SA"|"ar-IQ"|"ar-KW"|"ar-MA"|"ar-TN"|"ar-OM"|"ar-PS"|
+ *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
+ *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
   if(action == 'moved to') {
     next.chid = old.channelID
     next.alert[0].text = `${name} moved away from the chat.`
