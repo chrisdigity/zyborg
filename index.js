@@ -188,8 +188,8 @@ const YTMusic = function(n, id, src) {
           .then(playYT).catch(error => BOT_ERROR(_self.client, error))
     } else if(leaving && --_self.count < 1) {
       // user exited, count was --decremented... disconnect
-      _self.disconnect()
       _self.count = 0
+      setTimeout(_self.disconnect, 0)
     }
   })
 }
