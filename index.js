@@ -259,8 +259,8 @@ const PLAY_NEXT_ALERT = connection => {
       HTTPS.get(url, res => res.pipe(stream))
     }).catch(error => BOT_ERROR(Zyborg, error))
     const dispatcher = connection.play(stream)
-    dispatcher.on("finish", PLAY_NEXT_ALERT)
-    dispatcher.on("error", PLAY_NEXT_ALERT)
+    dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
+    dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
   } else {
     AlertQueue.shift()
     connection.disconnect()
