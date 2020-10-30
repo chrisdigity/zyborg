@@ -12,7 +12,6 @@ const { Spawn } = require("child_process")
 /* vars */
 //let Vcurr = 0
 let AlertQueue = []
-let Vconnection = null
 let MSGID_LASTSEEN = []
 let UPDATE_OK = false
 const Users = {}
@@ -250,10 +249,6 @@ const CLEAR_SPAM = function(BOT) {
 
 /* Zyborg function to play alert */
 const PLAY_NEXT_ALERT = connection => {
-  // store current connection
-  if(connection)
-    Vconnection = connection
-  
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     //debug
@@ -263,20 +258,18 @@ const PLAY_NEXT_ALERT = connection => {
     GoogleTTS(alert.text, alert.lang, 1).then(url => {
       HTTPS.get(url, res => res.pipe(stream))
     }).catch(error => BOT_ERROR(Zyborg, error))
-    const dispatcher = Vconnection.play(stream)
+    const dispatcher = connection.play(stream)
     dispatcher.on("finish", PLAY_NEXT_ALERT)
     dispatcher.on("error", PLAY_NEXT_ALERT)
-  } else CHECK_ALERTS()
+  } else {
+    AlertQueue.shift()
+    connection.disconnect()
+    CHECK_ALERTS()
+  }
 }
 
 /* Zyborg function to check/play next alert */
 const CHECK_ALERTS = () => {
-  // remove empty alert queues
-  if(AlertQueue.length && !AlertQueue[0].alert.length)
-    AlertQueue.shift()
-  // move to next alert channel
-  if(Vconnection)
-    Vconnection.disconnect()
   if(AlertQueue.length) {
     Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
       channel.join().then(PLAY_NEXT_ALERT).catch(error => {
