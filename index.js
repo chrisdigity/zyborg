@@ -269,8 +269,8 @@ const PLAY_NEXT_ALERT = connection => {
   } else {
     AlertQueue.shift()
     Vactive = false
-    await connection.disconnect()
-    CHECK_ALERTS()
+    connection.disconnect()
+    setTimeout(CHECK_ALERTS,100)
   }
 }
 
