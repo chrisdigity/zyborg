@@ -256,6 +256,9 @@ const PLAY_NEXT_ALERT = connection => {
   
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
+    //debug
+    console.log('PLAY_NEXT_ALERT() =>', alert)
+    
     const stream = new Stream.PassThrough()
     GoogleTTS(alert.text, alert.lang, 1).then(url => {
       HTTPS.get(url, res => res.pipe(stream))
@@ -268,7 +271,6 @@ const PLAY_NEXT_ALERT = connection => {
 
 /* Zyborg function to check/play next alert */
 const CHECK_ALERTS = () => {
-  console.log('QUEUE_ALERTS()=>', AlertQueue)
   // remove empty alert queues
   if(AlertQueue.length && !AlertQueue[0].alert.length)
     AlertQueue.shift()
@@ -284,12 +286,9 @@ const CHECK_ALERTS = () => {
 
 /* Zyborg function to queue next alert */
 const QUEUE_ALERT = function(next) {
-  //debug
-  console.log(next)
   // ignore NOINTRO channels
   if(CHIDS_NOINTRO.includes(next.chid))
     return;
-  console.log('ACCEPTED')
   // scan queue to stack alerts, otherwise append...
   let i = 0
   for( ; i < AlertQueue.length; i++) {
