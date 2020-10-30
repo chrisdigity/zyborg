@@ -27,10 +27,10 @@ const MSG_SPLIT_LENGTH = 1986
 const MSG_SPLIT_SEP = '_*break*'
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
 const PRESENCE_IDENTIFIER = '**#_Presence_GMT+10**'
-const JOINED = '*joined* '
-const LEFT = '*left* '
-const FROM = '*from* '
-const TO = '*to* '
+const JOINED = '*joined* <#'
+const LEFT = '*left* <#'
+const FROM = '*from* <#'
+const TO = '*to* <#'
 
 /* Youtube Music Links */
 const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=N1FuK9KC1vc'
@@ -336,11 +336,11 @@ const UPDATE_USER = function(userid, update) {
       content += `<@${id}> ${dateString}\n`
       if(user.voiceFrom) {
         content += moved ? FROM : LEFT
-        content += `<#${user.voiceFrom}>\n`
+        content += `${user.voiceFrom}>\n`
       }
       if(user.voiceTo) {
         content += moved ? TO : JOINED
-        content += `<#${user.voiceTo}>\n`
+        content += `${user.voiceTo}>\n`
       }
     }
   }
