@@ -107,6 +107,12 @@ const YTMusic = function(n, id, src) {
   // standard methods
   const playYT = connection => {
     _self.conn = connection
+    // check listeners still exist
+    if(connection.channel.members.array().length == 1) {
+      _self.disconnect()
+      return;
+    }
+    // dispatch yt stream
     _self.dispatcher = connection.play(YTDL(_self.source, {quality:'highestaudio'}),
                                        {volume: VOLUME})
     _self.dispatcher.on("finish", _self.disconnect)
@@ -189,7 +195,7 @@ const YTMusic = function(n, id, src) {
     } else if(leaving && --_self.count < 1) {
       // user exited, count was --decremented... disconnect
       _self.count = 0
-      setTimeout(_self.disconnect, 0)
+      _self.disconnect()
     }
   })
 }
