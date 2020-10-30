@@ -11,6 +11,7 @@ const { Spawn } = require("child_process")
 
 /* vars */
 //let Vcurr = 0
+let Vactive = false
 let AlertQueue = []
 let MSGID_LASTSEEN = []
 let UPDATE_OK = false
@@ -264,17 +265,20 @@ const PLAY_NEXT_ALERT = connection => {
   } else {
     AlertQueue.shift()
     connection.disconnect()
+    Vactive = false
     CHECK_ALERTS()
   }
 }
 
 /* Zyborg function to check/play next alert */
 const CHECK_ALERTS = () => {
-  if(!Zyborg.voice.connections.array().length && AlertQueue.length) {
+  if(!Vactive && AlertQueue.length) {
+    Vactive = true
     Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
       channel.join().then(PLAY_NEXT_ALERT).catch(error => {
-        BOT_ERROR(Zyborg, error)
         Zyborg.voice.connections.each(connection => connection.disconnect())
+        BOT_ERROR(Zyborg, error)
+        Vactive = false
         CHECK_ALERTS()
       })
     }).catch(error => BOT_ERROR(Zyborg, error))
