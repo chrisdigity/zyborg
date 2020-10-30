@@ -134,15 +134,14 @@ const YTMusic = function(n, id, src) {
     if(_self.dispatcher)
       _self.dispatcher.end()
     if(_self.conn)
-      _self.conn.leave()
+      _self.conn.disconnect()
     // ensure nothing remains
     _self.dispatcher = null
     _self.conn = null
   }
   
   _self.destroy = () => {
-    if(_self.conn)
-      _self.conn.disconnect()
+    _self.disconnect()
     _self.client.destroy()
   }
   
