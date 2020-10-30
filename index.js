@@ -262,6 +262,7 @@ const PLAY_NEXT_ALERT = connection => {
 
 /* Zyborg function to check/play next alert */
 const CHECK_ALERTS = () => {
+  console.log('QUEUE_ALERTS()=>', AlertQueue)
   // remove empty alert queues
   if(AlertQueue.length && !AlertQueue[0].alert.length)
     AlertQueue.shift()
