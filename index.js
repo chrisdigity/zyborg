@@ -554,8 +554,9 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   UPDATE_USER(member.id, update)
 
   //queue extra action advise
+  let alert = ''
+  let lang = 'en-AU'
   const name = `${member.nickname || member.user.username}`
-  const next = { chid: null, alert: [{ text: '', lang: 'en-AU' }] }
 /**
  * Acceptable languages...
  *  "af-ZA"|"am-ET"|"hy-AM"|"az-AZ"|"id-ID"|"ms-MY"|"bn-BD"|"bn-IN"|"ca-ES"|
@@ -573,9 +574,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
  *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
  *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
   if(action == 'moved to') {
-    next.chid = old.channelID
-    next.alert[0].text = `${name} moved away from the chat.`
-    QUEUE_ALERT(next)
+    alert = `${name} moved away from the chat.`
+    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: alert, lang: lang }] })
   }
   if(action == 'streaming') {
     let activity = ''
@@ -585,13 +585,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
         activity = member.presence.activities[num_activities - 1].name
     }
     if(activity.toLowerCase() == 'custom status') activity = ''
-    next.alert[0].text = `${name} started streaming ${activity}.`
+    alert = `${name} started streaming ${activity}.`
   }
   else if(action == 'regressed')
-    next.alert.text = `${name} stopped streaming.`
-  else next.alert[0].text = `${name} ${action} the chat.`
-  next.chid = state.channelID
-  QUEUE_ALERT(next)
+    alert = `${name} stopped streaming.`
+  else alert = `${name} ${action} the chat.`
+  QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang: lang }] })
 })
 
 
