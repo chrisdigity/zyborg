@@ -58,8 +58,10 @@ const CHIDS_NOINTRO = [
  * END USER CONFIGURATION *
  **************************/
 
-const escRegExp = (string) => {
-  return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+String.prototype.toGlobalRegExp = () => {
+  /* fix special characters in provided string
+   * ... $& means the whole matched string */
+  return new RegExp(this.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'), 'g')
 }
 
 const HEROKU_RESTART = function() {
@@ -429,13 +431,11 @@ Zyborg.on("ready", () => {
           Users[readID].voiceTime = Date.parse(line[1] + (GMT<0?'':'+') + GMT + ':00')
         } else if(recordType == 3) { //voice read extended
           if(line.includes(FROM) || line.includes(LEFT)) {
-            Users[readID].voiceFrom =
-              line.replace(/\*from\* <#/g, '').replace(/\*left\* <#/g, '').replace('>','')
+            Users[readID].voiceFrom = line.replace(FROM.toGlobalRegExp(), '').replace(LEFT.toGlobalRegExp(), '').replace('>','')
             if(line.includes(FROM))
               return; //should have another line of data for user
           } else if(line.includes(TO) || line.includes(JOINED))
-            Users[readID].voiceTo =
-              line.replace(/\*to\* <#/g, '').replace(/\*joined\* <#/g, '').replace('>','')
+            Users[readID].voiceTo = line.replace(TO.toGlobalRegExp(), '').replace(JOINED.toGlobalRegExp(), '').replace('>','')
           //return former voice type
           recordType--
         }
