@@ -268,8 +268,8 @@ const PLAY_NEXT_ALERT = connection => {
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
   } else {
     AlertQueue.shift()
-    connection.disconnect()
     Vactive = false
+    await connection.disconnect()
     CHECK_ALERTS()
   }
 }
