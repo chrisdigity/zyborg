@@ -9,11 +9,11 @@ const { spawn } = require("child_process")
 
 /* vars */
 //let Vcurr = 0
-const Users = {}
-let Vqueue = []
+let AlertQueue = []
 let Vconnection = null
 let MSGID_LASTSEEN = []
 let UPDATE_OK = false
+const Users = {}
 
 
 /**********************
@@ -247,46 +247,51 @@ const CLEAR_SPAM = function(BOT) {
 }
 
 /* Zyborg function to play alert */
-const PLAY_ALERT = function(alert) {
-  //++Vcurr
-  Vconnection.play(
-    DiscordTTS.getVoiceStream(alert.speak, 'en-AU')
-  ).on("finish",() => {
-    //if(--Vcurr == 0) {
-      Vconnection.disconnect()
-      Vconnection = null
-      CHECK_ALERT()
-    //}
-  })
+const PLAY_NEXT_ALERT = connection => {
+  // store current connection
+  if(connection)
+    Vconnection = connection
+  
+  if(AlertQueue[0].alert.length) {
+    let alert = AlertQueue[0].alert.shift()
+    Vconnection.play(
+      DiscordTTS.getVoiceStream(alert.text, alert.lang)
+    ).on("finish", PLAY_NEXT_ALERT)
+  } else CHECK_ALERTS()
 }
 
 /* Zyborg function to check/play next alert */
-const CHECK_ALERT = function() {
-  if(Vqueue.length) {
-    let alert = Vqueue.shift()
-    /* check alert eligibility
-     * - must have at least one existing member in the channel
-     * - channel MUST NOT be on exclusion list */
-    if(alert.channel.members.array().length > 0 &&
-       !CHIDS_NOINTRO.includes(alert.channel.id)) {
-      alert.channel.join().then(connection => {
-        Vconnection = connection
-        PLAY_ALERT(alert)
-      }).catch(error => BOT_ERROR(Zyborg, error))
-    }
-  } else if(Vconnection)
+const CHECK_ALERTS = () => {
+  // remove empty alert queues
+  if(AlertQueue.length && !AlertQueue[0].alert.length)
+    AlertQueue.shift()
+  // move to next alert channel
+  if(Vconnection)
     Vconnection.disconnect()
+  if(AlertQueue.length) {
+    Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
+      channel.join().then(PLAY_NEXT_ALERT).catch(error => BOT_ERROR(Zyborg, error))
+    }).catch(error => BOT_ERROR(Zyborg, error))
+  }
 }
 
 /* Zyborg function to queue next alert */
-const QUEUE_ALERT = function(alert) {
-  // play sound immediately if same channel
-  if(Vconnection && Vconnection.channel.id == alert.channel.id)
-    PLAY_ALERT(alert)
-  else Vqueue.push(alert)
-  // chceck alerts if no voice connection
-  if(Vconnection == null)
-    CHECK_ALERT()
+const QUEUE_ALERT = function(next) {
+  // ignore NOINTRO channels
+  if(CHIDS_NOINTRO.includes(next.chid))
+    return;
+  // scan queue to stack alerts, otherwise append...
+  let i = 0
+  for( ; i < AlertQueue.length; i++) {
+    if(AlertQueue[i].chid == next.chid) {
+      AlertQueue[i].alert.push(...next.alert)
+      break;
+    }
+  }
+  if(i == AlertQueue.length)
+    AlertQueue.push(next)
+  // activate alerts
+  CHECK_ALERTS()
 }
 
 const UPDATE_USER = function(userid, update) {
@@ -515,7 +520,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     return;
   
    /* acquire voice data and action */
-   let voiceChannel = state.channel
    let action = 'moved to'
 
    /* conditional data */
@@ -536,9 +540,13 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   UPDATE_USER(member.id, update)
 
   //queue extra action advise
-  let name = `${member.nickname || member.user.username}`
-  if(action == 'moved to')
-    QUEUE_ALERT({"channel": old.channel, "speak": `${name} moved away from the chat.`})
+  const name = `${member.nickname || member.user.username}`
+  const next = { chid: null, alert: { text: '', lang: 'en-AU' } }
+  if(action == 'moved to') {
+    next.chid = old.channelID
+    next.alert.text = `${name} moved away from the chat.`
+    QUEUE_ALERT(next)
+  }
   if(action == 'streaming') {
     let activity = ''
     if(member.presence.activities) {
@@ -547,12 +555,13 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
         activity = member.presence.activities[num_activities - 1].name
     }
     if(activity.toLowerCase() == 'custom status') activity = ''
-    QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} started streaming ${activity}.`})
+    next.alert.text = `${name} started streaming ${activity}.`
   }
   else if(action == 'regressed')
-    QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} stopped streaming.`})
-  else
-    QUEUE_ALERT({"channel": voiceChannel, "speak": `${name} ${action} the chat.`})
+    next.alert.text = `${name} stopped streaming.`
+  else next.alert.text = `${name} ${action} the chat.`
+  next.chid = state.channelID
+  QUEUE_ALERT(next)
 })
 
 
