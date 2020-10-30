@@ -155,8 +155,11 @@ const YTMusic = function(n, id, src) {
   _self.client.on("ready", () => {
     console.log(`${_self.client.user.tag} is ready...`)
     _self.client.channels.fetch(_self.chid).then(channel => {
-      if(channel.members.array().length >= 1)
-        channel.join().then(playYT).catch(error => BOT_ERROR(_self.client, error))
+      if(channel.members) {
+        _self.count = channel.members.array().length
+        if(_self.count > 0)
+          channel.join().then(playYT).catch(error => BOT_ERROR(_self.client, error))
+      }
     }).catch(error => BOT_ERROR(_self.client, error))
   })
   /* ...on voiceStateUpdate, check user joined before starting */
