@@ -82,11 +82,6 @@ const USER = function() {
 
 /* YTMusic constructor */
 const YTMusic = function(n, id, src) {
-  // error strings
-  const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
-  const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
-  const STREAM_URL_ERROR = 'TypeError [ERR_INVALID_ARG_TYPE]: input stream: The "url" argument must be of type string. Received undefined'
-  const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
 
   // make 'this' reliably accessible
   const _self = this
@@ -95,34 +90,65 @@ const YTMusic = function(n, id, src) {
   _self.name = n
   _self.chid = id
   _self.source = src
-  _self.conn = null
   _self.count = 0
-  
-  // standard methods
-  const playYT = connection => {
-    connection.play(
-      YTDL(_self.source, {quality:'highestaudio'}), {volume: VOLUME}
-    ).on("error", error => {
-      // standard errors
-      /*
-      if(error == STREAM_COOKIE_ERROR || error == STREAM_URL_ERROR) {
-        BOT_ERROR(_self.client, error)
-        playYT(connection)
-        return;
-      }*/
-      if(error == STREAM_ENDED_ERROR)
-        BOT_ERROR(_self.client, `${STREAM_ENDED_ERROR}\n*<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.*`)
-      else if(error == STREAM_REQUESTS_ERROR) {
-        BOT_ERROR(_self.client, `*${STREAM_REQUESTS_ERROR}\n*Attempting server switch. Please wait...*`)
-        setTimeout(HEROKU_RESTART, 1000)
-      } else BOT_ERROR(_self.client, error)
-      connection.disconnect()
-      _self.conn = null
-    })
-  }
+  _self.conn = null
+  _self.dispatcher = null
+  _self.rejoin = false;
   
   // define the client
   _self.client = new Client({ ws: { intents: Intents.ALL } })
+  
+  // error strings
+  const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
+  const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
+  const STREAM_URL_ERROR = 'TypeError [ERR_INVALID_ARG_TYPE]: input stream: The "url" argument must be of type string. Received undefined'
+  const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
+  
+  // standard methods
+  const playYT = connection => {
+    _self.conn = connection
+    _self.dispatcher = connection.play(YTDL(_self.source, {quality:'highestaudio'}),
+                                       {volume: VOLUME})
+    _self.dispatcher.on("finish", _self.disconnect)
+    _self.dispatcher.on("error", error => {
+      // recoverable errors
+      if(error == STREAM_COOKIE_ERROR || error == STREAM_URL_ERROR) {
+        BOT_ERROR(_self.client, error)
+        _self.rejoin = true
+      }
+      // UNrecoverable errors
+      else if(error == STREAM_REQUESTS_ERROR) {
+        BOT_ERROR(_self.client, `*${STREAM_REQUESTS_ERROR}\n*Attempting server switch. Please wait...*`)
+        setTimeout(HEROKU_RESTART, 1000)
+      }
+      else if(error == STREAM_ENDED_ERROR)
+        BOT_ERROR(_self.client, `${STREAM_ENDED_ERROR}\n*<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.*`)
+      else BOT_ERROR(_self.client, error)
+      // delayed disconnect, incase bot enters an infinite channel join/leave cycle
+      setTimeout(_self.disconnect, 1000)
+    })
+  }
+  
+  _self.disconnect = () => {
+    // stop and disconnect
+    if(_self.dispatcher)
+      _self.dispatcher.end()
+    if(_self.conn)
+      _self.conn.leave()
+    // ensure nothing remains
+    _self.dispatcher = null
+    _self.conn = null
+  }
+  
+  _self.destroy = () => {
+    if(_self.conn)
+      _self.conn.disconnect()
+    _self.client.destroy()
+  }
+  
+  _self.login = (token) => {
+    _self.client.login(token)
+  }
   
   // setup events for the client...
   /* ...on ready, log event and join if members waiting */
@@ -135,38 +161,35 @@ const YTMusic = function(n, id, src) {
   })
   /* ...on voiceStateUpdate, check user joined before starting */
   _self.client.on("voiceStateUpdate", (old, cur) => {
-    if(old.channelID != _self.chid && cur.channelID == _self.chid)
-    {
+    const joining = Boolean(old.channelID != _self.chid && cur.channelID == _self.chid)
+    const leaving = Boolean(old.channelID == _self.chid && cur.channelID != _self.chid)
+    // don't count own bot movements
+    if(cur.member.id == _self.client.user.id) {
+      // if leaving, check rejoin
+      if(leaving && _self.rejoin) {
+        // join channel
+        _self.channels.fetch(_self.chid).then(
+          channel => channel.join().then(playYT).catch(
+            error => BOT_ERROR(_self.client, error)
+          )
+        ).catch(error => BOT_ERROR(_self.client, error))
+      }
+      // if joining, check lonely
+      else if(joining && _self.count < 1)
+        _self.disconnect()
+    }
+    // all other user movements
+    if(joining) {
       // user joined Chillstep ++increment count and join
-      if(++_self.count >= 1)
+      if(++_self.count > 0)
         cur.member.voice.channel.join()
           .then(playYT).catch(error => BOT_ERROR(_self.client, error))
-    }
-    else if(old.channelID == _self.chid && cur.channelID != _self.chid)
-    {
-      // user exited Chillstep --decrement count
-      if(--_self.count < 0)
-        _self.count = 0
-      // check for lonely bot
-      if(_self.count <= 1) {
-        if(_self.conn) {
-          // remove chillstep bot
-          _self.conn.disconnect()
-          _self.conn = null
-        }
-      }
+    } else if(leaving && --_self.count < 1) {
+      // user exited, count was --decremented... disconnect
+      _self.disconnect()
+      _self.count = 0
     }
   })
-  
-  _self.destroy = function() {
-    if(_self.conn)
-      _self.conn.disconnect()
-    _self.client.destroy()
-  }
-  
-  _self.login = function(token) {
-    _self.client.login(token)
-  }
 }
 
 
