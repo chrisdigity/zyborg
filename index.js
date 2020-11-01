@@ -44,6 +44,7 @@ const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
 const RID_ADMIN = '694657068220809287'
 
 /* Channel IDs */
+const CHID_AFK = '187013967615361024' //voice
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
 const CHID_LASTSEEN = '768828161864630333'
@@ -53,7 +54,7 @@ const CHID_NCM = '766768566263087124' //muzix
 const CHID_NCS = '766835115564859403' //muzix
 const CHID_POP = '768594119341375489' //muzix
 const CHIDS_NOINTRO = [
-   CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS, CHID_POP,
+   CHID_AFK, CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS, CHID_POP,
 ]
 
 /**************************
@@ -570,10 +571,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
  *  "ar-BH"|"ar-DZ"|"ar-SA"|"ar-IQ"|"ar-KW"|"ar-MA"|"ar-TN"|"ar-OM"|"ar-PS"|
  *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
  *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
-  if(action == 'moved to') {
-    alert = `${name} moved away from the chat.`
-    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: alert, lang: lang }] })
-  }
   if(action == 'streaming') {
     let activity = ''
     if(member.presence.activities) {
@@ -588,6 +585,11 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     alert = `${name} stopped streaming.`
   else alert = `${name} ${action} the chat.`
   QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang: lang }] })
+  //additional leave alert
+  if(action == 'moved to') {
+    alert = `${name} moved away from the chat.`
+    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: alert, lang: lang }] })
+  }
 })
 
 
