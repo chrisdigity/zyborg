@@ -279,7 +279,7 @@ const CHECK_ALERTS = () => {
     Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
       channel.join().then(PLAY_NEXT_ALERT).catch(error => {
         Zyborg.voice.connections.each(connection => connection.disconnect())
-        BOT_ERROR(Zyborg, error)
+        console.error(error)
         Vactive = false
         CHECK_ALERTS()
       })
