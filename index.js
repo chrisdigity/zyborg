@@ -571,9 +571,10 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
  *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
  *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
   switch(member.id) {
-    case '63497370255491072': lang = 'ru-RU'; break
-    case '179126854597214208': lang = 'ja-JP'; break
-    case '61432760933289984': lang = 'ja-JP'; break
+    case '63497370255491072': lang = 'ru-RU'; break //san
+    case '179126854597214208': lang = 'ru-RU'; break //gecko
+    case '61432760933289984': lang = 'ja-JP'; break //lord anchan
+    case '101293186458062848': lang = 'ru-RU'; break //rektesh
     default: lang = 'en-AU'
   }
   const name = `${member.nickname || member.user.username}`
