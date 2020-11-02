@@ -553,8 +553,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let alert = ''
-  let lang = 'en-AU'
-  const name = `${member.nickname || member.user.username}`
+  let lang = ''
 /**
  * Acceptable languages...
  *  "af-ZA"|"am-ET"|"hy-AM"|"az-AZ"|"id-ID"|"ms-MY"|"bn-BD"|"bn-IN"|"ca-ES"|
@@ -571,6 +570,13 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
  *  "ar-BH"|"ar-DZ"|"ar-SA"|"ar-IQ"|"ar-KW"|"ar-MA"|"ar-TN"|"ar-OM"|"ar-PS"|
  *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
  *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
+  switch(member.id) {
+    case '63497370255491072': lang = 'ru-RU'; break
+    case '179126854597214208': lang = 'ja-JP'; break
+    case '61432760933289984': lang = 'ja-JP'; break
+    default: lang = 'en-AU'
+  }
+  const name = `${member.nickname || member.user.username}`
   if(action == 'streaming') {
     let activity = ''
     if(member.presence.activities) {
