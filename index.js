@@ -575,6 +575,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '179126854597214208': lang = 'ru-RU'; break //gecko
     case '61432760933289984': lang = 'ja-JP'; break //lord anchan
     case '101293186458062848': lang = 'ru-RU'; break //rektesh
+    case '286829962743382017': lang = 'es-US'; break //jasuar
     default: lang = 'en-AU'
   }
   const name = `${member.nickname || member.user.username}`
