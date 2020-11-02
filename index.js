@@ -183,7 +183,7 @@ const YTMusic = function(n, id, src) {
       // if leaving, check rejoin
       if(leaving && _self.rejoin) {
         // join channel
-        _self.channels.fetch(_self.chid).then(
+        _self.client.channels.fetch(_self.chid).then(
           channel => channel.join().then(playYT).catch(
             error => BOT_ERROR(_self.client, error)
           )
