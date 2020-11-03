@@ -48,13 +48,14 @@ const CHID_AFK = '187013967615361024' //voice
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
 const CHID_LASTSEEN = '768828161864630333'
+const CHID_STORY = '651366291160170516' //voice
 const CHID_ANIME = '730931465793044550' //voice
 const CHID_CHILLSTEP = '725473321868591104' //muzix
 const CHID_NCM = '766768566263087124' //muzix
 const CHID_NCS = '766835115564859403' //muzix
 const CHID_POP = '768594119341375489' //muzix
 const CHIDS_NOINTRO = [
-   CHID_AFK, CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS, CHID_POP,
+   CHID_AFK, CHID_STORY, CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS, CHID_POP,
 ]
 
 /**************************
@@ -576,7 +577,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '61432760933289984': lang = 'ja-JP'; break //lord anchan
     case '101293186458062848': lang = 'ru-RU'; break //rektesh
     case '286829962743382017': lang = 'es-US'; break //jasuar
-    case '449492304466673694': lang = 'en-NG'; break //snookims
+    case '449492304466673694': lang = 'en-KE'; break //snookims
     default: lang = 'en-AU'
   }
   const name = `${member.nickname || member.user.username}`
