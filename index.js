@@ -258,8 +258,8 @@ const PLAY_NEXT_ALERT = connection => {
     GoogleTTS(alert.text, alert.lang, 1).then(url => {
       HTTPS.get(url, res => res.pipe(stream))
     }).catch(error => {
-      AlertQueue[0].alert.push(alert)
-      BOT_ERROR(Zyborg, error)
+      AlertQueue[0].alert.unshift(alert)
+      console.error(error)
       stream.end()
     })
     const dispatcher = connection.play(stream)
@@ -578,7 +578,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '101293186458062848': lang = 'ru-RU'; break //rektesh
     case '286829962743382017': lang = 'es-US'; break //jasuar
     case '449492304466673694': lang = 'en-KE'; break //snookims
-    case '178813167223308288': lang = 'en-NZ'; break //digity
     default: lang = 'en-AU'
   }
   const name = `${member.nickname || member.user.username}`
