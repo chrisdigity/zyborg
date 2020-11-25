@@ -577,6 +577,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '286829962743382017': lang = 'es-US'; break //jasuar
     case '449492304466673694': lang = 'ru-RU'; break //snookims
     case '111470862519066624': lang = 'fr-FR'; break //ronlet
+    case '55656116759048192': lang = 'ar-AE'; break //khalil
     default: lang = 'en-AU'
   }
   const name = `${member.nickname || member.user.username}`
