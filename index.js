@@ -2,12 +2,10 @@
 /* eslint-disable no-console */
 
 /* required modules */
-const HTTPS = require("https");
-const Stream = require("stream");
-const YTDL = require("ytdl-core")
+const HTTPS = require("https")
+const Stream = require("stream")
 const GoogleTTS = require('google-tts-api')
 const { Client, Intents } = require("discord.js")
-const { Spawn } = require("child_process")
 
 /* vars */
 //let Vcurr = 0
@@ -24,7 +22,6 @@ const Users = {}
 
 /* CONSTANTS */
 const GMT = 10
-const VOLUME = 0.1
 const MSG_SPLIT_LENGTH = 1986
 const MSG_SPLIT_SEP = '_*break*'
 const VOICE_IDENTIFIER = '**#_Voice_GMT+10**'
@@ -34,28 +31,16 @@ const LEFT = '*left* <#'
 const FROM = '*from* <#'
 const TO = '*to* <#'
 
-/* Youtube Music Links */
-const LINK_CHILLSTEP = 'https://www.youtube.com/watch?v=N1FuK9KC1vc'
-const LINK_NCM = 'https://www.youtube.com/watch?v=Oxj2EAr256Y'
-const LINK_NCS = 'https://www.youtube.com/watch?v=Ioo-5ihWo6M'
-const LINK_POP = 'https://www.youtube.com/watch?v=0obbr_bWdW0'
-
-/* Role IDs */
-const RID_ADMIN = '694657068220809287'
-
 /* Channel IDs */
-const CHID_AFK = '187013967615361024' //voice
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
 const CHID_LASTSEEN = '768828161864630333'
 const CHID_STORY = '651366291160170516' //voice
 const CHID_ANIME = '730931465793044550' //voice
-const CHID_CHILLSTEP = '725473321868591104' //muzix
-const CHID_NCM = '766768566263087124' //muzix
-const CHID_NCS = '766835115564859403' //muzix
-const CHID_POP = '768594119341375489' //muzix
+const CHID_MUZIX = '768594119341375489' //voice
+const CHID_AFK = '187013967615361024' //voice
 const CHIDS_NOINTRO = [
-   CHID_AFK, CHID_STORY, CHID_ANIME, CHID_CHILLSTEP, CHID_NCM, CHID_NCS, CHID_POP,
+   CHID_AFK, CHID_STORY, CHID_ANIME, CHID_MUZIX,
 ]
 
 /**************************
@@ -66,10 +51,6 @@ String.prototype.toGlobalRegExp = function() {
   /* fix special characters in provided string
    * ... $& means the whole matched string */
   return new RegExp(this.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'), 'g')
-}
-
-const HEROKU_RESTART = function() {
-  Spawn("heroku restart")
 }
 
 const BOT_ERROR = function(BOT, error) {
@@ -86,139 +67,11 @@ const USER = function() {
   this.voiceTo = null
 }
 
-/* YTMusic constructor */
-const YTMusic = function(n, id, src) {
-
-  // make 'this' reliably accessible
-  const _self = this
-  
-  // define options and parameters
-  _self.name = n
-  _self.chid = id
-  _self.source = src
-  _self.count = 0
-  _self.conn = null
-  _self.dispatcher = null
-  _self.rejoin = false;
-  
-  // define the client
-  _self.client = new Client({ ws: { intents: Intents.ALL } })
-  
-  // error strings
-  const STREAM_URL_ERROR = 'TypeError [ERR_INVALID_ARG_TYPE]: input stream: The "url" argument must be of type string. Received undefined'
-  const STREAM_COOKIE_ERROR = 'Error: input stream: Error parsing info: Cookie header used in request, but unable to find YouTube identity token'
-  const STREAM_METADATA_ERROR = 'Error: input stream: Error parsing info: Unable to retrieve video metadata'
-  const STREAM_REQUESTS_ERROR = 'Error: input stream: Status code: 429'
-  const STREAM_ENDED_ERROR = 'Error: input stream: This live stream recording is not available.'
-  
-  // standard methods
-  const playYT = connection => {
-    _self.conn = connection
-    // check listeners still exist
-    if(connection.channel.members.array().length == 1) {
-      _self.disconnect()
-      return;
-    }
-    // dispatch yt stream
-    _self.dispatcher = connection.play(YTDL(_self.source, {quality:'highestaudio'}),
-                                       {volume: VOLUME})
-    _self.dispatcher.on("finish", _self.disconnect)
-    _self.dispatcher.on("error", error => {
-      // recoverable errors
-      if(error == STREAM_URL_ERROR || error == STREAM_COOKIE_ERROR ||
-         error == STREAM_METADATA_ERROR) {
-        BOT_ERROR(_self.client, error)
-        _self.rejoin = true
-      }
-      // UNrecoverable errors
-      else if(error == STREAM_REQUESTS_ERROR) {
-        BOT_ERROR(_self.client, `*${STREAM_REQUESTS_ERROR}\n*Attempting server switch. Please wait...*`)
-        setTimeout(HEROKU_RESTART, 1000)
-      }
-      else if(error == STREAM_ENDED_ERROR)
-        BOT_ERROR(_self.client, `${STREAM_ENDED_ERROR}\n*<@&${RID_ADMIN}>, the link provided for this livestream has ended.\nPlease update the link manually.*`)
-      else BOT_ERROR(_self.client, error)
-      // delayed disconnect, incase bot enters an infinite channel join/leave cycle
-      setTimeout(_self.disconnect, 1000)
-    })
-  }
-  
-  _self.disconnect = () => {
-    // stop and disconnect
-    if(_self.dispatcher)
-      _self.dispatcher.end()
-    if(_self.conn)
-      _self.conn.disconnect()
-    // ensure nothing remains
-    _self.dispatcher = null
-    _self.conn = null
-  }
-  
-  _self.destroy = () => {
-    _self.disconnect()
-    _self.client.destroy()
-  }
-  
-  _self.login = (token) => {
-    _self.client.login(token)
-  }
-  
-  // setup events for the client...
-  /* ...on ready, log event and join if members waiting */
-  _self.client.on("ready", () => {
-    console.log(`${_self.client.user.tag} is ready...`)
-    _self.client.channels.fetch(_self.chid).then(channel => {
-      if(channel.members) {
-        _self.count = channel.members.array().length
-        if(_self.count > 0)
-          channel.join().then(playYT).catch(error => BOT_ERROR(_self.client, error))
-      }
-    }).catch(error => BOT_ERROR(_self.client, error))
-  })
-  /* ...on voiceStateUpdate, check user joined before starting */
-  _self.client.on("voiceStateUpdate", (old, cur) => {
-    const joining = Boolean(old.channelID != _self.chid && cur.channelID == _self.chid)
-    const leaving = Boolean(old.channelID == _self.chid && cur.channelID != _self.chid)
-    // don't count own bot movements
-    if(cur.member.id == _self.client.user.id) {
-      // if leaving, check rejoin
-      if(leaving && _self.rejoin) {
-        // join channel
-        _self.client.channels.fetch(_self.chid).then(
-          channel => channel.join().then(playYT).catch(
-            error => BOT_ERROR(_self.client, error)
-          )
-        ).catch(error => BOT_ERROR(_self.client, error))
-      }
-      // if joining, check lonely
-      else if(joining && _self.count < 1)
-        _self.disconnect()
-    }
-    // all other user movements
-    else if(joining) {
-      // user joined Chillstep ++increment count and join
-      if(++_self.count > 0)
-        cur.member.voice.channel.join()
-          .then(playYT).catch(error => BOT_ERROR(_self.client, error))
-    } else if(leaving && --_self.count < 1) {
-      // user exited, count was --decremented... disconnect
-      _self.count = 0
-      _self.disconnect()
-    }
-  })
-}
-
-
 /**********************
  * BOT INITIALIZATION *
  **********************/
 
-
 const Zyborg = new Client({ ws: { intents: Intents.ALL } })
-const ZJ_Pop = new YTMusic('ZJ_Pop', CHID_POP, LINK_POP)
-const ZJ_Chillstep = new YTMusic('ZJ_Chillstep', CHID_CHILLSTEP, LINK_CHILLSTEP)
-const ZJ_NCM = new YTMusic('ZJ_NoCopyrightMusic', CHID_NCM, LINK_NCM)
-const ZJ_NCS = new YTMusic('ZJ_NoCopyrightSounds', CHID_NCS, LINK_NCS)
 
 /**************************
  * END BOT INITIALIZATION *
@@ -610,19 +463,11 @@ process.once('SIGTERM', () => {
     channel.send("```SIGTERM detected. Restarting...```").catch(console.error)
   }).catch(console.error)
   
-  // destroy all bots
+  // destroy bot
   Zyborg.destroy()
-  ZJ_Pop.destroy()
-  ZJ_Chillstep.destroy()
-  ZJ_NCM.destroy()
-  ZJ_NCS.destroy()
   
   process.exit(101)
 })
 
 // bot logins
 Zyborg.login(process.env.ZYBORG_TOKEN)
-ZJ_Chillstep.login(process.env.ZJCHILLSTEP_TOKEN)
-ZJ_NCM.login(process.env.ZJNOCOPYRIGHTMUSIC_TOKEN)
-ZJ_NCS.login(process.env.ZJNOCOPYRIGHTSOUNDS_TOKEN)
-ZJ_Pop.login(process.env.ZJPOP_TOKEN)
