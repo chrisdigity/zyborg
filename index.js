@@ -1,6 +1,57 @@
 /* eslint-env node, es6 */
 /* eslint-disable no-console */
 
+/** Acceptable languages...
+ar-eg => Arabic (Egypt)
+ar-sa => Arabic (Saudi Arabia)
+bg-bg => Bulgarian
+ca-es => Catalan
+zh-cn => Chinese (China)
+zh-hk => Chinese (Hong Kong)
+zh-tw => Chinese (Taiwan)
+hr-hr => Croatian
+cs-cz => Czech
+da-dk => Danish
+nl-be => Dutch (Belgium)
+nl-nl => Dutch (Netherlands)
+en-au => English (Australia)
+en-ca => English (Canada)
+en-gb => English (Great Britain)
+en-in => English (India)
+en-ie => English (Ireland)
+en-us => English (United States)
+fi-fi => Finnish
+fr-ca => French (Canada)
+fr-fr => French (France)
+fr-ch => French (Switzerland)
+de-at => German (Austria)
+de-de => German (Germany)
+de-ch => German (Switzerland)
+el-gr => Greek
+he-il => Hebrew
+hi-in => Hindi
+hu-hu => Hungarian
+id-id => Indonesian
+it-it => Italian
+ja-jp => Japanese
+ko-kr => Korean
+ms-my => Malay
+nb-no => Norwegian
+pl-pl => Polish
+pt-br => Portuguese (Brazil)
+pt-pt => Portuguese (Portugal)
+ro-ro => Romanian
+ru-ru => Russian
+sk-sk => Slovak
+sl-si => Slovenian
+es-mx => Spanish (Mexico)
+es-es => Spanish (Spain)
+sv-se => Swedish
+ta-in => Tamil
+th-th => Thai
+tr-tr => Turkish
+vi-vn => Vietnamese */
+
 /* required modules */
 const HTTP = require("http")
 const Stream = require("stream")
@@ -107,7 +158,7 @@ const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
-    HTTP.get(`http://api.voicerss.org/?key=${process.env.VOICERSS_TOKEN}&hl=${alert.lang}&c=mp3&f=48khz_16bit_stereo&src=${encodeURIComponent(alert.text)}`, res => res.pipe(stream))
+    HTTP.get(`http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=${ alert.lang }&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
@@ -401,22 +452,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   //queue extra action advise
   let alert = ''
   let lang = ''
-/**
- * Acceptable languages...
- *  "af-ZA"|"am-ET"|"hy-AM"|"az-AZ"|"id-ID"|"ms-MY"|"bn-BD"|"bn-IN"|"ca-ES"|
- *  "cs-CZ"|"da-DK"|"de-DE"|"en-AU"|"en-CA"|"en-GH"|"en-GB"|"en-IN"|"en-IE"|
- *  "en-KE"|"en-NZ"|"en-NG"|"en-PH"|"en-SG"|"en-ZA"|"en-TZ"|"en-US"|"es-AR"|
- *  "es-BO"|"es-CL"|"es-CO"|"es-CR"|"es-EC"|"es-SV"|"es-ES"|"es-US"|"es-GT"|
- *  "es-HN"|"es-MX"|"es-NI"|"es-PA"|"es-PY"|"es-PE"|"es-PR"|"es-DO"|"es-UY"|
- *  "es-VE"|"eu-ES"|"fil-PH"|"fr-CA"|"fr-FR"|"gl-ES"|"ka-GE"|"gu-IN"|"hr-HR"|
- *  "zu-ZA"|"is-IS"|"it-IT"|"jv-ID"|"kn-IN"|"km-KH"|"lo-LA"|"lv-LV"|"lt-LT"|
- *  "hu-HU"|"ml-IN"|"mr-IN"|"nl-NL"|"ne-NP"|"nb-NO"|"pl-PL"|"pt-BR"|"pt-PT"|
- *  "ro-RO"|"si-LK"|"sk-SK"|"sl-SI"|"su-ID"|"sw-TZ"|"sw-KE"|"fi-FI"|"sv-SE"|
- *  "ta-IN"|"ta-SG"|"ta-LK"|"ta-MY"|"te-IN"|"vi-VN"|"tr-TR"|"ur-PK"|"ur-IN"|
- *  "el-GR"|"bg-BG"|"ru-RU"|"sr-RS"|"uk-UA"|"he-IL"|"ar-IL"|"ar-JO"|"ar-AE"|
- *  "ar-BH"|"ar-DZ"|"ar-SA"|"ar-IQ"|"ar-KW"|"ar-MA"|"ar-TN"|"ar-OM"|"ar-PS"|
- *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
- *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
+
   switch(member.id) {
     case '63497370255491072': lang = 'ru-ru'; break //san
     case '61432760933289984': lang = 'ja-jp'; break //lord anchan
