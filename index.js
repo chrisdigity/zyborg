@@ -441,10 +441,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     alert = `${name} stopped streaming.`
   else alert = `${name} ${action} the chat.`
   //additional leave alert first
-  if(action == 'moved to') {
-    alert = `${name} moved away from the chat.`
-    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: alert, lang: lang }] })
-  }
+  if(action == 'moved to')
+    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: `${name} moved away from the chat.`, lang: lang }] })
   QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang: lang }] })
 })
 
