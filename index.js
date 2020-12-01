@@ -2,9 +2,8 @@
 /* eslint-disable no-console */
 
 /* required modules */
-const HTTPS = require("https")
+const HTTP = require("http")
 const Stream = require("stream")
-const GoogleTTS = require('google-tts-api')
 const { Client, Intents } = require("discord.js")
 
 /* vars */
@@ -108,13 +107,7 @@ const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
-    GoogleTTS(alert.text, alert.lang, 1).then(url => {
-      HTTPS.get(url, res => res.pipe(stream))
-    }).catch(error => {
-      AlertQueue[0].alert.unshift(alert)
-      console.error(error)
-      stream.end()
-    })
+    HTTP.get(`http://api.voicerss.org/?key=${process.env.VOICERSS_TOKEN}&hl=${alert.lang}&f=48khz_16bit_stereo&src=${encodeURIComponent(alert.text)}`, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
@@ -425,12 +418,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
  *  "ar-QA"|"ar-LB"|"ar-EG"|"fa-IR"|"hi-IN"|"th-TH"|"ko-KR"|"zh-TW"|
  *  "yue-Hant-HK"|"ja-JP"|"zh-HK"|"zh" */
   switch(member.id) {
-    case '63497370255491072': lang = 'ru-RU'; break //san
-    case '61432760933289984': lang = 'ja-JP'; break //lord anchan
-    case '286829962743382017': lang = 'es-US'; break //jasuar
-    case '449492304466673694': lang = 'ru-RU'; break //snookims
-    case '111470862519066624': lang = 'fr-FR'; break //ronlet
-    case '55656116759048192': lang = 'ar-AE'; break //khalil
+    case '63497370255491072': lang = 'ru-ru'; break //san
+    case '61432760933289984': lang = 'ja-jp'; break //lord anchan
+    case '286829962743382017': lang = 'es-mx'; break //jasuar
+    case '449492304466673694': lang = 'ru-ru'; break //snookims
+    case '111470862519066624': lang = 'fr-fr'; break //ronlet
+    case '55656116759048192': lang = 'ar-sa'; break //khalil
     default: lang = 'en-AU'
   }
   const name = `${member.nickname || member.user.username}`
