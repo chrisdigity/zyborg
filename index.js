@@ -107,7 +107,7 @@ const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
-    HTTP.get(`http://api.voicerss.org/?key=${process.env.VOICERSS_TOKEN}&hl=${alert.lang}&f=48khz_16bit_stereo&src=${encodeURIComponent(alert.text)}`, res => res.pipe(stream))
+    HTTP.get(`http://api.voicerss.org/?key=${process.env.VOICERSS_TOKEN}&hl=${alert.lang}&c=mp3&f=48khz_16bit_stereo&src=${encodeURIComponent(alert.text)}`, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
@@ -424,7 +424,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '449492304466673694': lang = 'ru-ru'; break //snookims
     case '111470862519066624': lang = 'fr-fr'; break //ronlet
     case '55656116759048192': lang = 'ar-sa'; break //khalil
-    default: lang = 'en-AU'
+    default: lang = 'en-gb'
   }
   const name = `${member.nickname || member.user.username}`
   if(action == 'streaming') {
@@ -440,12 +440,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   else if(action == 'regressed')
     alert = `${name} stopped streaming.`
   else alert = `${name} ${action} the chat.`
-  QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang: lang }] })
-  //additional leave alert
+  //additional leave alert first
   if(action == 'moved to') {
     alert = `${name} moved away from the chat.`
     QUEUE_ALERT({ chid: old.channelID, alert: [{ text: alert, lang: lang }] })
   }
+  QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang: lang }] })
 })
 
 
