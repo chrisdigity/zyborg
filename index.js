@@ -462,7 +462,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '55656116759048192': lang = 'ar-sa'; break //khalil
     default: lang = 'en-gb'
   }
-  const name = `${member.nickname || member.user.username}`
+  // obtain name and attempt to remove any ZALGO
+  const name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
   if(action == 'streaming') {
     let activity = ''
     if(member.presence.activities) {
