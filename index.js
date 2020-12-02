@@ -158,7 +158,7 @@ const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
-    HTTP.get(`http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=${ alert.lang }&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`, res => res.pipe(stream))
+    HTTP.get(`http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=en-au&v=isla&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
@@ -451,8 +451,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let alert = ''
-  let lang = 'en-au'
-/*
+  let lang = ''
   switch(member.id) {
     case '63497370255491072': lang = 'ru-ru'; break //san
     case '61432760933289984': lang = 'ja-jp'; break //lord anchan
@@ -462,7 +461,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '55656116759048192': lang = 'ar-eg'; break //khalil
     default: lang = 'en-gb'
   }
-*/
   // obtain name and attempt to remove any ZALGO
   const name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
   if(action == 'streaming') {
