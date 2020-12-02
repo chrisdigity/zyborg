@@ -451,8 +451,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let alert = ''
-  let lang = ''
-
+  let lang = 'en-au'
+/*
   switch(member.id) {
     case '63497370255491072': lang = 'ru-ru'; break //san
     case '61432760933289984': lang = 'ja-jp'; break //lord anchan
@@ -462,6 +462,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '55656116759048192': lang = 'ar-eg'; break //khalil
     default: lang = 'en-gb'
   }
+*/
   // obtain name and attempt to remove any ZALGO
   const name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
   if(action == 'streaming') {
