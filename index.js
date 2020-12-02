@@ -459,7 +459,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     case '286829962743382017': lang = 'es-mx'; break //jasuar
     case '449492304466673694': lang = 'ru-ru'; break //snookims
     case '111470862519066624': lang = 'fr-fr'; break //ronlet
-    case '55656116759048192': lang = 'ar-sa'; break //khalil
+    case '55656116759048192': lang = 'ar-eg'; break //khalil
     default: lang = 'en-gb'
   }
   // obtain name and attempt to remove any ZALGO
