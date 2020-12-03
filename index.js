@@ -55,6 +55,7 @@ vi-vn => Vietnamese */
 /* required modules */
 const HTTP = require("http")
 const Stream = require("stream")
+const { spawn } = require("child_process")
 const { Client, Intents } = require("discord.js")
 
 /* vars */
@@ -96,6 +97,10 @@ const CHIDS_NOINTRO = [
 /**************************
  * END USER CONFIGURATION *
  **************************/
+
+const HEROKU_RESTART = function() {
+  spawn("heroku restart")
+}
 
 String.prototype.toGlobalRegExp = function() {
   /* fix special characters in provided string
@@ -176,10 +181,9 @@ const CHECK_ALERTS = () => {
     Vactive = true
     Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
       channel.join().then(PLAY_NEXT_ALERT).catch(error => {
-        Zyborg.voice.connections.each(connection => connection.disconnect())
         console.error(error)
-        Vactive = false
-        CHECK_ALERTS()
+        //restart bot, restart rotation may be bad...
+        HEROKU_RESTART()
       })
     }).catch(error => BOT_ERROR(Zyborg, error))
   }
