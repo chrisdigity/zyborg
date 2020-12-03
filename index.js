@@ -372,8 +372,10 @@ Zyborg.on("message", message => {
   if(message.channel.id != CHID_SPAM || !message.member.hasPermission('ADMINISTRATOR'))
     return
   // check commands
-  if(message.content.toLowerCase() == "!zyborg clearspam")
+  if(message.content.toLowerCase() == "_clearspam")
     CLEAR_SPAM(Zyborg)
+  if(message.content.toLowerCase() == "_restart")
+    HEROKU_RESTART()
 })
 /* ...on guildMemberAdd, log event (hello) */
 Zyborg.on("guildMemberAdd", member => {
