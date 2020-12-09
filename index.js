@@ -65,6 +65,7 @@ let AlertQueue = []
 let MSGID_LASTSEEN = []
 let UPDATE_OK = false
 const Users = {}
+const ActivityCache = []
 
 
 /**********************
@@ -82,6 +83,8 @@ const LEFT = '*left* <#'
 const FROM = '*from* <#'
 const TO = '*to* <#'
 
+/* Channel Categories */
+const CHID_PRIVATE = '775678141767090206' //category
 /* Channel IDs */
 const CHID_SPAM = '675644867447095296'
 const CHID_SERVER = '651364689665720350'
@@ -403,12 +406,45 @@ Zyborg.on("guildMemberRemove", member => {
 })
 /* ...on presenceUpdate, log update appropriately */
 Zyborg.on("presenceUpdate", (old, cur) => {
-  //debug
-  
   //ignore ALL bot movements
   let member = cur.member
   if(member.user.bot)
     return;
+  
+  /* detect activities and enable private chats */
+  if(cur.activities.length) {
+    cur.activities.forEach(activity => {
+      if(activity.type == 'PLAYING') {
+        const Aname = activity.name
+        const vchName = Aname.toLowerCase().replaceAll(' ', '_').replace(/\W/g, '')
+        const tchName = vchName.replace('_', '-')
+        let vChannel = cur.guild.channels.find(channel => channel.name === vchName)
+        let tChannel = cur.guild.channels.find(channel => channel.name === tchName)
+        if(ActivityCache.indexOf(Aname) == -1) {
+          ActivityCache.push(Aname)
+          // check voice channel exists, else create
+          if(!vChannel) {
+            cur.guild.channels.create(tchName, { type: 'voice' }).then(channel => {
+              vChannel = channel
+              channel.setParent(CHID_PRIVATE)
+              channel.lockPermissions()
+            })
+          }
+          // check text channel exists, else create
+          if(!tChannel) {
+            cur.guild.channels.create(tchName, { type: 'text' }).then(channel => {
+              tChannel = channel
+              channel.setParent(CHID_PRIVATE)
+              channel.lockPermissions()
+            })
+          }
+        }
+        // ensure text and voice channel overrides for user
+        vChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
+        tChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
+      }
+    })
+  }
   
   /* acquire presence data and log with a message */
   let id = member.id
