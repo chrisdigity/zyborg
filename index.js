@@ -419,29 +419,26 @@ Zyborg.on("presenceUpdate", (old, cur) => {
         const vchName = Aname.replace(/ /g, '_').replace(/\W/g, '')
         const tchName = vchName.toLowerCase().replace('_', '-')
         let vChannel = cur.guild.channels.cache.find(channel => channel.name === vchName)
+        if(vChannel) vChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
         let tChannel = cur.guild.channels.cache.find(channel => channel.name === tchName)
+        if(tChannel) tChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
         if(ActivityCache.indexOf(Aname) == -1) {
           ActivityCache.push(Aname)
           // check voice channel exists, else create
           if(!vChannel) {
-            cur.guild.channels.create(tchName, { type: 'voice' }).then(channel => {
-              vChannel = channel
-              channel.setParent(CHID_PRIVATE)
-              channel.lockPermissions()
-            }).catch(console.error)
+            cur.guild.channels.create(vchName, { type: 'voice' })
+            .then(channel => channel.setParent(CHID_PRIVATE))
+            .then(channel => channel.lockPermissions())
+            .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })) .catch(console.error)
           }
           // check text channel exists, else create
           if(!tChannel) {
-            cur.guild.channels.create(tchName, { type: 'text' }).then(channel => {
-              tChannel = channel
-              channel.setParent(CHID_PRIVATE)
-              channel.lockPermissions()
-            }).catch(console.error)
+            cur.guild.channels.create(tchName, { type: 'text' })
+            .then(channel => channel.setParent(CHID_PRIVATE))
+            .then(channel => channel.lockPermissions())
+            .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })) .catch(console.error)
           }
         }
-        // ensure text and voice channel overrides for user
-        vChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
-        tChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
       }
     })
   }
