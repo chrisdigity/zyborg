@@ -418,8 +418,8 @@ Zyborg.on("presenceUpdate", (old, cur) => {
         const Aname = activity.name
         const vchName = Aname.replace(/ /g, '_').replace(/\W/g, '')
         const tchName = vchName.toLowerCase().replace('_', '-')
-        let vChannel = cur.guild.channels.find(channel => channel.name === vchName)
-        let tChannel = cur.guild.channels.find(channel => channel.name === tchName)
+        let vChannel = cur.guild.channels.cache.find(channel => channel.name === vchName)
+        let tChannel = cur.guild.channels.cache.find(channel => channel.name === tchName)
         if(ActivityCache.indexOf(Aname) == -1) {
           ActivityCache.push(Aname)
           // check voice channel exists, else create
