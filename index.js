@@ -416,8 +416,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
     cur.activities.forEach(activity => {
       if(activity.type == 'PLAYING') {
         const Aname = activity.name
-        console.log(Aname, Aname.toLowerCase())
-        const vchName = Aname.replaceAll(' ', '_').replace(/\W/g, '')
+        const vchName = Aname.replace(/ /g, '_').replace(/\W/g, '')
         const tchName = vchName.toLowerCase().replace('_', '-')
         let vChannel = cur.guild.channels.find(channel => channel.name === vchName)
         let tChannel = cur.guild.channels.find(channel => channel.name === tchName)
