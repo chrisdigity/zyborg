@@ -416,8 +416,9 @@ Zyborg.on("presenceUpdate", (old, cur) => {
     cur.activities.forEach(activity => {
       if(activity.type == 'PLAYING') {
         const Aname = activity.name
-        const vchName = Aname.toLowerCase().replaceAll(' ', '_').replace(/\W/g, '')
-        const tchName = vchName.replace('_', '-')
+        console.log(Aname, Aname.toLowerCase())
+        const vchName = Aname.replaceAll(' ', '_').replace(/\W/g, '')
+        const tchName = vchName.toLowerCase().replace('_', '-')
         let vChannel = cur.guild.channels.find(channel => channel.name === vchName)
         let tChannel = cur.guild.channels.find(channel => channel.name === tchName)
         if(ActivityCache.indexOf(Aname) == -1) {
@@ -428,7 +429,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
               vChannel = channel
               channel.setParent(CHID_PRIVATE)
               channel.lockPermissions()
-            })
+            }).catch(console.error)
           }
           // check text channel exists, else create
           if(!tChannel) {
@@ -436,7 +437,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
               tChannel = channel
               channel.setParent(CHID_PRIVATE)
               channel.lockPermissions()
-            })
+            }).catch(console.error)
           }
         }
         // ensure text and voice channel overrides for user
