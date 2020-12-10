@@ -150,7 +150,7 @@ const CLEAR_SPAM = function(BOT) {
                }).catch(console.error)
             })
             /* ... replace original adviseof auto clearing */
-            channel.send('Channel cleared...\nGroovy Bot, prefix: - (https://groovy.bot/commands)```-play <link or search query>\n-next```Gaius Bot, prefix: > (https://docs.gaiusbot.me/books/play/page/public)```>leaderboard me\n>level```').catch(console.error)
+            channel.send('Channel cleared...\nIntro Bot (http://www.voicerss.org/api/demo.aspx)\nAppend `[Voice]` or `[language-code]` to your server nickname\n\nGroovy Bot, prefix: - (https://groovy.bot/commands)\n`-play <link or search query>`\n`-next`\n\nGaius Bot, prefix: > (https://docs.gaiusbot.me/books/play/page/public)\n`>leaderboard me`\n>`level`').catch(console.error)
          }
       }).catch(console.error)
    }).catch(console.error)
