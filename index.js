@@ -416,25 +416,25 @@ Zyborg.on("presenceUpdate", (old, cur) => {
     cur.activities.forEach(activity => {
       if(activity.type == 'PLAYING') {
         const Aname = activity.name
-        const vchName = Aname.replace(/ /g, '_').replace(/\W/g, '')
-        const tchName = vchName.toLowerCase().replace('_', '-')
+        const vchName = Aname.replace(/ /g, '_').replace(/\W/g, '').replace(/_/g, ' ');
         let vChannel = cur.guild.channels.cache.find(channel => channel.name === vchName)
         if(vChannel) vChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
-        let tChannel = cur.guild.channels.cache.find(channel => channel.name === tchName)
-        if(tChannel) tChannel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })
         if(ActivityCache.indexOf(Aname) == -1) {
           ActivityCache.push(Aname)
           // check voice channel exists, else create
           if(!vChannel) {
-            cur.guild.channels.create(vchName, { type: 'voice' })
-            .then(channel => channel.setParent(CHID_PRIVATE))
-            .then(channel => channel.lockPermissions())
-            .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })) .catch(console.error)
-          }
-          // check text channel exists, else create
-          if(!tChannel) {
-            cur.guild.channels.create(tchName, { type: 'text' })
-            .then(channel => channel.setParent(CHID_PRIVATE))
+            const privateList = [vchName]
+            cur.guild.channels.cache.forEach(channel => {
+              if(channel.parentID === CHID_PRIVATE)
+                privateList.push(channel.name);
+            })
+            privateList.sort()
+            const newPosition = privateList.indexOf(vchName)
+            cur.guild.channels.create(vchName, {
+              type: 'voice',
+              parent: CHID_PRIVATE,
+              position: newPosition
+            })
             .then(channel => channel.lockPermissions())
             .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })) .catch(console.error)
           }
