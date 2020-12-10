@@ -167,7 +167,6 @@ const PLAY_NEXT_ALERT = connection => {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
     const url = `http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=${ encodeURIComponent(alert.lang) }${ alert.voice ? '&v=' + encodeURIComponent(alert.voice) : '' }&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`
-    console.log(alert, url)
     HTTP.get(url, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
@@ -494,8 +493,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   // obtain name, remove any ZALGO, and split modifiers
   let name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
   if(name.includes('[') && name.includes(']')) {
-    //reduce name
-    name = name.substring(0, name.lastIndexOf('['))
     //handle modifiers
     const modifier = name.substring(name.lastIndexOf('[') + 1, name.lastIndexOf(']'))
     if(modifier) {
@@ -507,6 +504,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
         lang = modifier
       }
     }
+    //reduce name
+    name = name.substring(0, name.lastIndexOf('['))
   }
   if(action == 'streaming') {
     let activity = ''
