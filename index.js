@@ -166,7 +166,9 @@ const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
-    HTTP.get(`http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=${ encodeURIComponent(alert.lang) }${ alert.voice ? '&v=' + encodeURIComponent(alert.voice) : '' }&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`, res => res.pipe(stream))
+    const url = `http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=${ encodeURIComponent(alert.lang) }${ alert.voice ? '&v=' + encodeURIComponent(alert.voice) : '' }&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`
+    console.log(alert, url)
+    HTTP.get(url, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
