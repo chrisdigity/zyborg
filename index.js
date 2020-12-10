@@ -150,9 +150,7 @@ const CLEAR_SPAM = function(BOT) {
                }).catch(console.error)
             })
             /* ... replace original adviseof auto clearing */
-            channel.send(
-               'Channel cleared...\n```Please be aware, messages in this channel will generally be removed on a daily basis.```'
-            ).catch(console.error)
+            channel.send('Channel cleared...\nGroovy Bot, prefix: - (https://groovy.bot/commands)```-play <link or search query>\n-next```Gaius Bot, prefix: > (https://docs.gaiusbot.me/books/play/page/public)```>leaderboard me\n>level```').catch(console.error)
          }
       }).catch(console.error)
    }).catch(console.error)
