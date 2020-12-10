@@ -1,56 +1,56 @@
 /* eslint-env node, es6 */
 /* eslint-disable no-console */
 
-/** Acceptable languages...
-ar-eg => Arabic (Egypt)
-ar-sa => Arabic (Saudi Arabia)
-bg-bg => Bulgarian
-ca-es => Catalan
-zh-cn => Chinese (China)
-zh-hk => Chinese (Hong Kong)
-zh-tw => Chinese (Taiwan)
-hr-hr => Croatian
-cs-cz => Czech
-da-dk => Danish
-nl-be => Dutch (Belgium)
-nl-nl => Dutch (Netherlands)
-en-au => English (Australia)
-en-ca => English (Canada)
-en-gb => English (Great Britain)
-en-in => English (India)
-en-ie => English (Ireland)
-en-us => English (United States)
-fi-fi => Finnish
-fr-ca => French (Canada)
-fr-fr => French (France)
-fr-ch => French (Switzerland)
-de-at => German (Austria)
-de-de => German (Germany)
-de-ch => German (Switzerland)
-el-gr => Greek
-he-il => Hebrew
-hi-in => Hindi
-hu-hu => Hungarian
-id-id => Indonesian
-it-it => Italian
-ja-jp => Japanese
-ko-kr => Korean
-ms-my => Malay
-nb-no => Norwegian
-pl-pl => Polish
-pt-br => Portuguese (Brazil)
-pt-pt => Portuguese (Portugal)
-ro-ro => Romanian
-ru-ru => Russian
-sk-sk => Slovak
-sl-si => Slovenian
-es-mx => Spanish (Mexico)
-es-es => Spanish (Spain)
-sv-se => Swedish
-ta-in => Tamil
-th-th => Thai
-tr-tr => Turkish
-vi-vn => Vietnamese */
+const VOICES = {
+  Oda: 'ar-eg',
+  Salim: 'ar-sa',
+  Dimo: 'bg-bg', Catalan: 'bg-bg', Rut: 'bg-bg',
+  Luli: 'zh-cn', Shu: 'zh-cn', Chow: 'zh-cn', Wang: 'zh-cn',
+  Jia: 'zh-hk', Xia: 'zh-hk', Chen: 'zh-hk',
+  Akemi: 'zh-tw', Lin: 'zh-tw', Lee: 'zh-tw',
+  Nikola: 'hr-hr',
+  Josef: 'cs-cz',
+  Freja: 'da-dk',
+  Daan: 'nl-be',
+  Lotte: 'nl-nl', Bram: 'nl-nl',
+  Zoe: 'en-au', Isla: 'en-au', Evie: 'en-au', Jack: 'en-au',
+  Rose: 'en-ca', Clara: 'en-ca', Emma: 'en-ca', Mason: 'en-ca',
+  Alice: 'en-gb', Nancy: 'en-gb', Lily: 'en-gb', Harry: 'en-gb',
+  Eka: 'en-in', Jai: 'en-in', Ajit: 'en-in',
+  Oran: 'en-ie',
+  Linda: 'en-us', Amy: 'en-us', Mary: 'en-us', John: 'en-us', Mike: 'en-us',
+  Aada: 'fi-fi',
+  Emile: 'fr-ca', Olivia: 'fr-ca', Logan: 'fr-ca', Felix: 'fr-ca',
+  Bette: 'fr-fr', Iva: 'fr-fr', Zola: 'fr-fr', Axel: 'fr-fr',
+  Theo: 'fr-ch',
+  Lukas: 'de-at',
+  Hanna: 'de-de', Lina: 'de-de', Jonas: 'de-de',
+  Tim: 'de-ch',
+  Neo: 'el-gr',
+  Rami: 'he-il',
+  Puja: 'hi-in', Kabir: 'hi-in',
+  Mate: 'hu-hu',
+  Intan: 'id-id',
+  Bria: 'it-it', Mia: 'it-it', Pietro: 'it-it',
+  Hina: 'ja-jp', Airi: 'ja-jp', Fumi: 'ja-jp', Akira: 'ja-jp',
+  Nari: 'ko-kr',
+  Aqil: 'ms-my',
+  Marte: 'nb-no', Erik: 'nb-no',
+  Julia: 'pl-pl', Jan: 'pl-pl',
+  Marcia: 'pt-br', Ligia: 'pt-br', Yara: 'pt-br', Dinis: 'pt-br',
+  Leonor: 'pt-pt',
+  Doru: 'ro-ro',
+  Olga: 'ru-ru', Marina: 'ru-ru', Peter: 'ru-ru',
+  Beda: 'sk-sk',
+  Vid: 'sl-si',
+  Juana: 'es-mx', Silvia: 'es-mx', Teresa: 'es-mx', Jose: 'es-mx',
+  Camila: 'es-es', Sofia: 'es-es', Luna: 'es-es', Diego: 'es-es',
+  Molly: 'sv-se', Hugo: 'sv-se',
+  Sai: 'ta-in',
+  Ukrit: 'th-th',
+  Omer: 'tr-tr',
+  Chi: 'vi-vn'
+}
 
 /* required modules */
 const HTTP = require("http")
@@ -166,7 +166,7 @@ const PLAY_NEXT_ALERT = connection => {
   if(AlertQueue[0].alert.length) {
     let alert = AlertQueue[0].alert.shift()
     const stream = new Stream.PassThrough()
-    HTTP.get(`http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=en-au&v=isla&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`, res => res.pipe(stream))
+    HTTP.get(`http://api.voicerss.org/?key=${ process.env.VOICERSS_TOKEN }&hl=${ encodeURIComponent(alert.lang) }${ alert.voice ? '&v=' + encodeURIComponent(alert.voice) : '' }&c=mp3&f=48khz_16bit_stereo&src=${ encodeURIComponent(alert.text) }`, res => res.pipe(stream))
     const dispatcher = connection.play(stream)
     dispatcher.on("finish", () => PLAY_NEXT_ALERT(connection))
     dispatcher.on("error", () => PLAY_NEXT_ALERT(connection))
@@ -487,18 +487,25 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
 
   //queue extra action advise
   let alert = ''
-  let lang = ''
-  switch(member.id) {
-    case '63497370255491072': lang = 'ru-ru'; break //san
-    case '61432760933289984': lang = 'ja-jp'; break //lord anchan
-    case '286829962743382017': lang = 'es-mx'; break //jasuar
-    case '449492304466673694': lang = 'ru-ru'; break //snookims
-    case '111470862519066624': lang = 'fr-fr'; break //ronlet
-    case '55656116759048192': lang = 'ar-eg'; break //khalil
-    default: lang = 'en-gb'
+  let voice = 'isla'
+  let lang = 'en-au'
+  // obtain name, remove any ZALGO, and split modifiers
+  let name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
+  if(name.includes('[') && name.includes(']')) {
+    //reduce name
+    name = name.substring(0, name.lastIndexOf('['))
+    //handle modifiers
+    const modifier = name.substring(name.lastIndexOf('[') + 1, name.lastIndexOf(']'))
+    if(modifier) {
+      if(VOICES[modifier]) {
+        voice = modifier
+        lang = VOICES[modifier]
+      } else {
+        voice = ''
+        lang = modifier
+      }
+    }
   }
-  // obtain name and attempt to remove any ZALGO
-  const name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
   if(action == 'streaming') {
     let activity = ''
     if(member.presence.activities) {
@@ -514,8 +521,8 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   else alert = `${name} ${action} the chat.`
   //additional leave alert first
   if(action == 'moved to')
-    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: `${name} moved away from the chat.`, lang: lang }] })
-  QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang: lang }] })
+    QUEUE_ALERT({ chid: old.channelID, alert: [{ text: `${name} moved away from the chat.`, lang, voice }] })
+  QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang, voice }] })
 })
 
 
