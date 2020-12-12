@@ -404,8 +404,11 @@ Zyborg.on("message", message => {
       name = name.substring(0, name.lastIndexOf('['))
     // end modifier removal
     message.member.setNickname(`${msg[2] || name}, [${msg[1]}]`).then(() => {
-      return message.channel.send('Successfully set language/voice preference :thumbup:');
-    }).catch(console.error)
+      return message.channel.send('Intro preference embeded in Nickname :thumbup:');
+    }).catch(error => {
+      console.error(error)
+      message.channel.send(error).catch(console.error)
+    })
   }
   // check admin commands
   if(!message.member.hasPermission('ADMINISTRATOR')) return
