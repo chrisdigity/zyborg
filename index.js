@@ -155,15 +155,15 @@ const CLEAR_SPAM = function(BOT) {
              .addFields(
                {
                  name: 'Introduction Bot, prefix: ( _ )',
-                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang <voice> <(optional) nickname>```'
+                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
                },
                {
                  name: 'Leveling Bot, prefix: ( > )',
-                 value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>level <(optional) @User>\n>leaderboard me```'
+                 value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>leaderboard me\n>level```'
                },
                {
                  name: 'Musit Bot, prefix: ( - )',
-                 value: 'More commands here: https://groovy.bot/commands\n```-play <link or search query>\n-next\n-stop```'
+                 value: 'More commands here: https://groovy.bot/commands\n```-play (link or search query)\n-next\n-stop```'
                }
              )
              .setTimestamp()
