@@ -56,7 +56,7 @@ const VOICES = {
 const HTTP = require("http")
 const Stream = require("stream")
 const { spawn } = require("child_process")
-const { Client, Intents } = require("discord.js")
+const { Client, Intents, MessageEmbed } = require("discord.js")
 
 /* vars */
 //let Vcurr = 0
@@ -135,7 +135,6 @@ const Zyborg = new Client({ ws: { intents: Intents.ALL } })
  * END BOT INITIALIZATION *
  **************************/
 
-
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
    BOT.channels.fetch(CHID_SPAM).then(channel => {
@@ -150,7 +149,26 @@ const CLEAR_SPAM = function(BOT) {
                }).catch(console.error)
             })
             /* ... replace original adviseof auto clearing */
-            channel.send('Channel cleared...\nIntro Bot (http://www.voicerss.org/api/demo.aspx)\nAppend `[Voice]` or `[language-code]` to your server nickname\n\nGroovy Bot, prefix: - (https://groovy.bot/commands)\n`-play <link or search query>`\n`-next`\n\nGaius Bot, prefix: > (https://docs.gaiusbot.me/books/play/page/public)\n`>leaderboard me`\n>`level`').catch(console.error)
+           const embed = new MessageEmbed()
+             .setColor('#ffffff')
+             .setDescriptions('Public bot commands available on this server.')
+             .setThumbnail('https://www.freepnglogos.com/uploads/discord-logo-png/discord-emoji-recurring-discord-perks-gaming-17.png')
+             .addFields(
+               {
+                 name: 'Introduction Bot, prefix: _',
+                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang <lang-code or Voice> <(optional) new nickname>```'
+               },
+               {
+                 name: 'Leveling Bot, prefix: >',
+                 value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>level <(optional) @User>\n>leaderboard me```'
+               },
+               {
+                 name: 'Musit Bot, prefix: -',
+                 value: 'More commands here: https://groovy.bot/commands\n```-play <link or search query>\n-next\n-stop```'
+               }
+             )
+             .setTimestamp()
+            channel.send('Channel cleared...', embed).catch(console.error)
          }
       }).catch(console.error)
    }).catch(console.error)
@@ -371,12 +389,30 @@ Zyborg.on("ready", () => {
   CLEAR_SPAM(Zyborg)
 })
 Zyborg.on("message", message => {
-  if(message.channel.id != CHID_SPAM || !message.member.hasPermission('ADMINISTRATOR'))
-    return
-  // check commands
-  if(message.content.toLowerCase() == "_clearspam")
+  // command messages must be in spam channel
+  if(message.channel.id != CHID_SPAM) return
+  // split message
+  const msg = message.content.split(' ')
+  // check basic commands
+  if(msg[1] && msg[0].toLowerCase() == "_lang") {
+    let name = message.member.nickname || message.member.user.username
+    // modifier removal
+    if(name.includes(', ['))
+      name = name.substring(0, name.lastIndexOf(', ['))
+    else if(name.includes(' ['))
+      name = name.substring(0, name.lastIndexOf(' ['))
+    else if(name.includes('['))
+      name = name.substring(0, name.lastIndexOf('['))
+    // end modifier removal
+    message.member.setNickname(`${msg[2] || name}, [${msg[1]}]`).then(() => {
+      return message.channel.send('Successfully set language/voice preference :thumbup:');
+    }).catch(console.error)
+  }
+  // check admin commands
+  if(!message.member.hasPermission('ADMINISTRATOR')) return
+  if(msg[0].toLowerCase() == "_clearspam")
     CLEAR_SPAM(Zyborg)
-  if(message.content.toLowerCase() == "_restart")
+  if(msg[0].toLowerCase() == "_restart")
     HEROKU_RESTART()
 })
 /* ...on guildMemberAdd, log event (hello) */
