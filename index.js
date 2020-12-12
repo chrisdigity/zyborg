@@ -407,7 +407,7 @@ Zyborg.on("message", message => {
       return message.channel.send('Intro preference embeded in Nickname :thumbup:');
     }).catch(error => {
       console.error(error)
-      message.channel.send(error).catch(console.error)
+      message.channel.send(error.message).catch(console.error)
     })
   }
   // check admin commands
