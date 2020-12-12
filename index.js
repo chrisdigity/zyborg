@@ -150,20 +150,19 @@ const CLEAR_SPAM = function(BOT) {
             })
             /* ... replace original adviseof auto clearing */
            const embed = new MessageEmbed()
-             .setColor('#ffffff')
-             .setDescription('Public bot commands available on this server.')
+             .setDescription('Available bot commands.')
              .setThumbnail('https://www.freepnglogos.com/uploads/discord-logo-png/discord-emoji-recurring-discord-perks-gaming-17.png')
              .addFields(
                {
-                 name: 'Introduction Bot, prefix: _',
-                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang <lang-code or Voice> <(optional) new nickname>```'
+                 name: 'Introduction Bot, prefix: ( _ )',
+                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang <voice> <(optional) nickname>```'
                },
                {
-                 name: 'Leveling Bot, prefix: >',
+                 name: 'Leveling Bot, prefix: ( > )',
                  value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>level <(optional) @User>\n>leaderboard me```'
                },
                {
-                 name: 'Musit Bot, prefix: -',
+                 name: 'Musit Bot, prefix: ( - )',
                  value: 'More commands here: https://groovy.bot/commands\n```-play <link or search query>\n-next\n-stop```'
                }
              )
