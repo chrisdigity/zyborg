@@ -151,7 +151,7 @@ const CLEAR_SPAM = function(BOT) {
             /* ... replace original adviseof auto clearing */
            const embed = new MessageEmbed()
              .setColor('#ffffff')
-             .setDescriptions('Public bot commands available on this server.')
+             .setDescription('Public bot commands available on this server.')
              .setThumbnail('https://www.freepnglogos.com/uploads/discord-logo-png/discord-emoji-recurring-discord-perks-gaming-17.png')
              .addFields(
                {
