@@ -479,7 +479,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
               while(children.length >= 40) {
                 let child;
                 do {
-                  child = children.length ? children.pop() : null;
+                  child = children.length ? children.shift() : null;
                 } while(child && child.type == 'voice' && child.members.size)
                 if(child) child.delete('Private channels capped at 30').catch(console.error)
               }
