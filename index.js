@@ -465,7 +465,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
           // check voice channel exists, else create
           if(!vChannel) {
             // if max allowed channels, delete last
-            cur.guild.channels.fetch(CHID_PRIVATE).then(channel => {
+            cur.guild.channels.resolve(CHID_PRIVATE).then(channel => {
               const children = channel.children.array()
               if(children.length >= 50) {
                 let child;
