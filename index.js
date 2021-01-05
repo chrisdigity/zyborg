@@ -464,15 +464,6 @@ Zyborg.on("presenceUpdate", (old, cur) => {
           ActivityCache.push(Aname)
           // check voice channel exists, else create
           if(!vChannel) {
-            // if max allowed channels, delete last
-            const children = cur.guild.channels.resolve(CHID_PRIVATE).children.array()
-            while(children.length >= 40) {
-              let child;
-              do {
-                child = children.length ? children.pop() : null;
-              } while(child && child.type == 'voice' && child.members.size)
-              if(child) child.delete('Private channels capped at 30').catch(console.error)
-            }
             // create the channel
             cur.guild.channels.create(vchName, {
               type: 'voice',
@@ -482,6 +473,17 @@ Zyborg.on("presenceUpdate", (old, cur) => {
             .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true }))
             .then(channel => channel.setPosition(0))
             .catch(console.error)
+            .finally(() => {
+              // check max allowed channels, delete last
+              const children = cur.guild.channels.resolve(CHID_PRIVATE).children.array()
+              while(children.length >= 40) {
+                let child;
+                do {
+                  child = children.length ? children.pop() : null;
+                } while(child && child.type == 'voice' && child.members.size)
+                if(child) child.delete('Private channels capped at 30').catch(console.error)
+              }
+            })
           }
         }
       }
