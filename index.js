@@ -465,25 +465,23 @@ Zyborg.on("presenceUpdate", (old, cur) => {
           // check voice channel exists, else create
           if(!vChannel) {
             // if max allowed channels, delete last
-            cur.guild.channels.resolve(CHID_PRIVATE).then(channel => {
-              const children = channel.children.array()
-              if(children.length >= 50) {
-                let child;
-                do {
-                  child = children.pop();
-                } while(child.type == 'voice' && child.members.size)
-                child.delete('Too many private channels')
-              }
-            }).finally(() => {
-              // create the channel
-              cur.guild.channels.create(vchName, {
-                type: 'voice',
-                parent: CHID_PRIVATE,
-                position: 0
-              })
-              .then(channel => channel.lockPermissions())
-              .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true })) .catch(console.error)
+            const children = cur.guild.channels.resolve(CHID_PRIVATE).children.array()
+            if(children.length >= 50) {
+              let child;
+              do {
+                child = children.pop();
+              } while(child.type == 'voice' && child.members.size)
+              child.delete('Too many private channels')
+            }
+            // create the channel
+            cur.guild.channels.create(vchName, {
+              type: 'voice',
+              parent: CHID_PRIVATE,
+              position: 0
             })
+            .then(channel => channel.lockPermissions())
+            .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true }))
+            .catch(console.error)
           }
         }
       }
