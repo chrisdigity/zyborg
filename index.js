@@ -476,11 +476,11 @@ Zyborg.on("presenceUpdate", (old, cur) => {
             // create the channel
             cur.guild.channels.create(vchName, {
               type: 'voice',
-              parent: CHID_PRIVATE,
-              position: 0
+              parent: CHID_PRIVATE
             })
             .then(channel => channel.lockPermissions())
             .then(channel => channel.updateOverwrite(cur.user.id, { VIEW_CHANNEL: true }))
+            .then(channel => channel.setPosition(0))
             .catch(console.error)
           }
         }
