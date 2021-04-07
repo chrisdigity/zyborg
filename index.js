@@ -96,6 +96,7 @@ const CHID_AFK = '187013967615361024' //voice
 const CHIDS_NOINTRO = [
    CHID_AFK, CHID_STORY, CHID_ANIME, CHID_MUZIX,
 ]
+const RID_RECENTLYACTIVE = '828874771985989642'
 
 /**************************
  * END USER CONFIGURATION *
@@ -138,6 +139,16 @@ const Zyborg = new Client({ ws: { intents: Intents.ALL } })
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
    BOT.channels.fetch(CHID_SPAM).then(channel => {
+      /* fetch members from channel */
+      channel.members.fetch().then(members => {
+        /* for every member ... */
+        members.each(member => {
+          /* ... remove recently active role, if present */
+          if (member.roles.cache.has(RID_RECENTLYACTIVE)) {
+            if(!member.voice.channelID) member.roles.remove(RID_RECENTLYACTIVE)
+          }
+        })
+      })
       /* featch messages from channel */
       channel.messages.fetch().then(messages => {
          /* if more than 1 message ... */
@@ -234,10 +245,10 @@ const UPDATE_USER = function(userid, update) {
   //update userid with update object
   for(const param in update)
     Users[userid][param] = update[param]
-  
+
   if(!UPDATE_OK)
     return;
-  
+
   let id = null
   let user = null
   let dateString = ''
@@ -356,7 +367,7 @@ Zyborg.on("ready", () => {
           if(!Users.hasOwnProperty(readID))
             Users[readID] = new USER()
           //store presence data
-          Users[readID].presenceTime = Date.parse(line[2]+ (GMT<0?'':'+') + GMT + ':00') 
+          Users[readID].presenceTime = Date.parse(line[2]+ (GMT<0?'':'+') + GMT + ':00')
           Users[readID].presenceType = line[0]
         } else if(recordType == 2) { //voice read
           //advance voice type
@@ -388,6 +399,11 @@ Zyborg.on("ready", () => {
   CLEAR_SPAM(Zyborg)
 })
 Zyborg.on("message", message => {
+  const member = message.member
+  // update recently active role if not a bot
+  if(!member.user.bot && !member.roles.cache.has(RID_RECENTLYACTIVE)) {
+    member.roles.add(RID_RECENTLYACTIVE)
+  }
   // command messages must be in spam channel
   if(message.channel.id != CHID_SPAM) return
   // split message
@@ -447,7 +463,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
   let member = cur.member
   if(member.user.bot)
     return;
-  
+
   /* detect activities and enable private chats */
   if(cur.activities.length) {
     cur.activities.forEach(activity => {
@@ -489,7 +505,7 @@ Zyborg.on("presenceUpdate", (old, cur) => {
       }
     })
   }
-  
+
   /* acquire presence data and log with a message */
   let id = member.id
   let platform = Object.keys(cur.clientStatus)[0] || null
@@ -514,7 +530,12 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   let member = state.member
   if(member.user.bot)
     return;
-  
+
+  // update recently active role if not a bot
+  if(!member.user.bot && !member.roles.cache.has(RID_RECENTLYACTIVE)) {
+    member.roles.add(RID_RECENTLYACTIVE)
+  }
+
    /* acquire voice data and action */
    let action = 'moved to'
 
@@ -582,10 +603,10 @@ process.once('SIGTERM', () => {
   Zyborg.channels.fetch(CHID_SPAM).then(channel => {
     channel.send("```SIGTERM detected. Restarting...```").catch(console.error)
   }).catch(console.error)
-  
+
   // destroy bot
   Zyborg.destroy()
-  
+
   process.exit(101)
 })
 
