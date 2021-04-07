@@ -139,15 +139,13 @@ const Zyborg = new Client({ ws: { intents: Intents.ALL } })
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
    BOT.channels.fetch(CHID_SPAM).then(channel => {
-      /* fetch members from channel */
-      channel.members.fetch().then(members => {
-        /* for every member ... */
-        members.each(member => {
-          /* ... remove recently active role, if present */
-          if (member.roles.cache.has(RID_RECENTLYACTIVE)) {
-            if(!member.voice.channelID) member.roles.remove(RID_RECENTLYACTIVE)
-          }
-        })
+      /* for every member of this channel (should be everyone) ... */
+      channel.members.each(member => {
+        /* ... remove recently active role, if present */
+        if (member.roles.cache.has(RID_RECENTLYACTIVE)) {
+          // check not currently active
+          if(!member.voice.channelID) member.roles.remove(RID_RECENTLYACTIVE)
+        }
       })
       /* featch messages from channel */
       channel.messages.fetch().then(messages => {
