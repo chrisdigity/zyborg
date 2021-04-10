@@ -96,7 +96,12 @@ const CHID_AFK = '187013967615361024' //voice
 const CHIDS_NOINTRO = [
    CHID_AFK, CHID_STORY, CHID_ANIME, CHID_MUZIX,
 ]
-const RID_RECENTLYACTIVE = '828874771985989642'
+const RID_ACTIVE = '828874771985989642'
+const RID_5DAGO = '830361562929561620'
+const RID_4DAGO = '830361673306079253'
+const RID_3DAGO = '830361747084410880'
+const RID_2DAGO = '830361824922566657'
+const RID_1DAGO = '830361876310654996'
 
 /**************************
  * END USER CONFIGURATION *
@@ -136,15 +141,39 @@ const Zyborg = new Client({ ws: { intents: Intents.ALL } })
  * END BOT INITIALIZATION *
  **************************/
 
+const RESET_RECENT = function(member) {
+  if (member.roles.cache.has(RID_5DAGO)) member.roles.remove(RID_5DAGO)
+  if (member.roles.cache.has(RID_4DAGO)) member.roles.remove(RID_4DAGO)
+  if (member.roles.cache.has(RID_3DAGO)) member.roles.remove(RID_3DAGO)
+  if (member.roles.cache.has(RID_2DAGO)) member.roles.remove(RID_2DAGO)
+  if (member.roles.cache.has(RID_1DAGO)) member.roles.remove(RID_1DAGO)
+  if (!member.roles.cache.has(RID_ACTIVE)) member.roles.add(RID_ACTIVE)
+}
+
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function(BOT) {
    BOT.channels.fetch(CHID_SPAM).then(channel => {
       /* for every member of this channel (should be everyone) ... */
       channel.members.each(member => {
         /* ... remove recently active role, if present */
-        if (member.roles.cache.has(RID_RECENTLYACTIVE)) {
-          // check not currently active
-          if(!member.voice.channelID) member.roles.remove(RID_RECENTLYACTIVE)
+        if (member.roles.cache.has(RID_ACTIVE)) {
+          // advance level of activity
+          if (member.roles.cache.hash(RID_5DAGO)) {
+            member.roles.remove(RID_5DAGO)
+            member.roles.remove(RID_ACTIVE)
+          } else if (member.roles.cache.hash(RID_4DAGO)) {
+            member.roles.remove(RID_4DAGO)
+            member.roles.add(RID_5DAGO)
+          } else if (member.roles.cache.hash(RID_3DAGO)) {
+            member.roles.remove(RID_3DAGO)
+            member.roles.add(RID_4DAGO)
+          } else if (member.roles.cache.hash(RID_2DAGO)) {
+            member.roles.remove(RID_2DAGO)
+            member.roles.add(RID_3DAGO)
+          } else if (member.roles.cache.hash(RID_1DAGO)) {
+            member.roles.remove(RID_1DAGO)
+            member.roles.add(RID_2DAGO)
+          } else member.roles.add(RID_1DAGO)
         }
       })
       /* featch messages from channel */
@@ -399,9 +428,7 @@ Zyborg.on("ready", () => {
 Zyborg.on("message", message => {
   const member = message.member
   // update recently active role if not a bot
-  if(!member.user.bot && !member.roles.cache.has(RID_RECENTLYACTIVE)) {
-    member.roles.add(RID_RECENTLYACTIVE)
-  }
+  if(!member.user.bot) RESET_RECENT(member)
   // command messages must be in spam channel
   if(message.channel.id != CHID_SPAM) return
   // split message
@@ -530,9 +557,7 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
     return;
 
   // update recently active role if not a bot
-  if(!member.user.bot && !member.roles.cache.has(RID_RECENTLYACTIVE)) {
-    member.roles.add(RID_RECENTLYACTIVE)
-  }
+  if(!member.user.bot) RESET_RECENT(member)
 
    /* acquire voice data and action */
    let action = 'moved to'
