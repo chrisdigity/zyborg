@@ -158,19 +158,19 @@ const CLEAR_SPAM = function(BOT) {
         /* ... remove recently active role, if present */
         if (member.roles.cache.has(RID_ACTIVE)) {
           // advance level of activity
-          if (member.roles.cache.hash(RID_5DAGO)) {
+          if (member.roles.cache.has(RID_5DAGO)) {
             member.roles.remove(RID_5DAGO)
             member.roles.remove(RID_ACTIVE)
-          } else if (member.roles.cache.hash(RID_4DAGO)) {
+          } else if (member.roles.cache.has(RID_4DAGO)) {
             member.roles.remove(RID_4DAGO)
             member.roles.add(RID_5DAGO)
-          } else if (member.roles.cache.hash(RID_3DAGO)) {
+          } else if (member.roles.cache.has(RID_3DAGO)) {
             member.roles.remove(RID_3DAGO)
             member.roles.add(RID_4DAGO)
-          } else if (member.roles.cache.hash(RID_2DAGO)) {
+          } else if (member.roles.cache.has(RID_2DAGO)) {
             member.roles.remove(RID_2DAGO)
             member.roles.add(RID_3DAGO)
-          } else if (member.roles.cache.hash(RID_1DAGO)) {
+          } else if (member.roles.cache.has(RID_1DAGO)) {
             member.roles.remove(RID_1DAGO)
             member.roles.add(RID_2DAGO)
           } else member.roles.add(RID_1DAGO)
