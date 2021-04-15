@@ -427,6 +427,8 @@ Zyborg.on("ready", () => {
 })
 Zyborg.on("message", message => {
   const member = message.member
+  // ignore news updates from other servers
+  if(!member) return
   // update recently active role if not a bot
   if(!member.user.bot) RESET_RECENT(member)
   // command messages must be in spam channel
