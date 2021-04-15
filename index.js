@@ -561,6 +561,9 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   // update recently active role if not a bot
   if(!member.user.bot) RESET_RECENT(member)
 
+  // disallow deafened users
+  if(cur.channelID && cur.selfDeaf) cur.setChannel(CHID_AFK);
+
    /* acquire voice data and action */
    let action = 'moved to'
 
