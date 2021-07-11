@@ -588,8 +588,13 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   let alert = ''
   let voice = 'isla'
   let lang = 'en-au'
-  // obtain name, remove any ZALGO, and split modifiers
-  let name = (member.nickname || member.user.username).replace(/([aeiouy]̈)|[̀-ͯ҉]/ig,'$1')
+  // obtain name ( using nickname as preference )
+  let name = (member.nickname || member.user.username);
+  // remove ZALGO for correct pronunciation
+  name = name.replace(/([aeiouy]̈)|[̀-ͯ҉]/ig, '$1')
+  // replace certain phrases with appropriate alternatives
+  name = name.replace(/big buudu/ig, 'smol peepee')
+  // check name for voice modifiers
   if(name.includes('[') && name.includes(']')) {
     //handle modifiers
     const modifier = name.substring(name.lastIndexOf('[') + 1, name.lastIndexOf(']'))
