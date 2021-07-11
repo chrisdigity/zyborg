@@ -592,8 +592,6 @@ Zyborg.on("voiceStateUpdate", (old, cur) => {
   let name = (member.nickname || member.user.username);
   // remove ZALGO for correct pronunciation
   name = name.replace(/([aeiouy]̈)|[̀-ͯ҉]/ig, '$1')
-  // replace certain phrases with appropriate alternatives
-  name = name.replace(/big buudu/ig, 'smol peepee')
   // check name for voice modifiers
   if(name.includes('[') && name.includes(']')) {
     //handle modifiers
