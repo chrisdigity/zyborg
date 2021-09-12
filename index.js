@@ -172,20 +172,24 @@ const CLEAR_SPAM = function (BOT) {
           }).catch(console.error);
         });
         /* ... replace original adviseof auto clearing */
-        const embed = new MessageEmbed()
-          .setDescription('Available bot commands.')
-          .setThumbnail('https://discord.com/assets/f9bb9c4af2b9c32a2c5ee0014661546d.png')
-          .addFields({
-            name: 'Introduction Bot, prefix: ( _ )',
-            value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
-          }, {
-            name: 'Leveling Bot, prefix: ( > )',
-            value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>leaderboard me\n>level```'
-          }, {
-            name: 'Musit Bot, prefix: ( ! )',
-            value: 'Web App: https://rythm.fm/app/\nMore commands here: https://rythm.fm/docs/commands/\n```!play (link or search query)\n!next\n!stop```'
-          }).setTimestamp();
-        channel.send('Channel cleared...', embed).catch(console.error);
+        channel.send({
+          content: 'Channel cleared...',
+          embeds: [
+            new MessageEmbed()
+              .setDescription('Available bot commands.')
+              .setThumbnail('https://discord.com/assets/f9bb9c4af2b9c32a2c5ee0014661546d.png')
+              .addFields({
+                name: 'Introduction Bot, prefix: ( _ )',
+                value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
+              }, {
+                name: 'Leveling Bot, prefix: ( > )',
+                value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>leaderboard me\n>level```'
+              }, {
+                name: 'Musit Bot, prefix: ( ! )',
+                value: 'Web App: https://rythm.fm/app/\nMore commands here: https://rythm.fm/docs/commands/\n```!play (link or search query)\n!next\n!stop```'
+              }).setTimestamp()
+          ]
+        }).catch(console.error);
       }
     }).catch(console.error);
   }).catch(console.error);
