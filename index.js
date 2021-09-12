@@ -196,7 +196,6 @@ const CLEAR_SPAM = function (BOT) {
 
 /* Zyborg function to play alert */
 const PLAY_NEXT_ALERT = connection => {
-  console.log(AlertQueue[0]);
   if (AlertQueue[0].alert.length) {
     const alert = AlertQueue[0].alert.shift();
     const stream = new PassThrough();
@@ -210,17 +209,9 @@ const PLAY_NEXT_ALERT = connection => {
       '&c=mp3&f=48khz_16bit_stereo&src=' + encodeURIComponent(alert.text);
     get(url, res => res.pipe(stream));
     player.play(resource);
-    const subscription = connection.subscribe(player);
-    player.once(AudioPlayerStatus.Idle, () => {
-      console.log('playnext');
-      subscription.unsubscribe();
-      PLAY_NEXT_ALERT(connection);
-    });
-    player.once('error', (err) => {
-      console.error(err);
-      subscription.unsubscribe();
-      PLAY_NEXT_ALERT(connection);
-    });
+    player.once(AudioPlayerStatus.Idle, () => PLAY_NEXT_ALERT(connection));
+    player.once('error', () => PLAY_NEXT_ALERT(connection));
+    connection.subscribe(player);
   } else {
     Vactive = false;
     AlertQueue.shift();
