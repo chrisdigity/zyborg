@@ -476,7 +476,7 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
   const state = cur.channelID ? cur : old;
   const member = state.member;
   if (member.user.bot) return;
-
+console.log(1);
   // deafened users are forced AFK because reasons
   if (cur.channelID && cur.selfDeaf) {
     SelfDeafList.add(cur.id); // place member on the silent warning list.
@@ -486,6 +486,7 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
     }, 20000);
   } else SelfDeafList.delete(cur.id);
 
+  console.log(2);
   /* determine action */
   let action = 'moved to'; // default
   if (!old.channelID) action = 'joined';
@@ -495,6 +496,7 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
   else if (old.channelID === cur.channelID) return;
   // ^return - ignores all other 'same-channel' actions
 
+  console.log(3);
   // update recently active role if not a bot
   RESET_RECENT(member);
   // update voice presence
@@ -504,6 +506,7 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
     voiceTime: Date.now()
   });
 
+  console.log(4);
   // queue extra action advise
   let alert, voice, lang;
   // obtain name ( using nickname as preference )
@@ -525,6 +528,7 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
     lang = 'en-au';
     voice = 'isla';
   }
+  console.log(5);
   if (action === 'streaming') {
     const activityName = member.presence.activities.find(activity => {
       return Boolean(activity.type === 'STREAMING');
@@ -535,11 +539,16 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
   } else alert = `${name} ${action} the chat.`;
   // additional leave alert, first?
   if (action === 'moved to') {
+    console.log({
+      chid: old.channelID,
+      alert: [{ text: `${name} moved away from the chat.`, lang, voice }]
+    });
     QUEUE_ALERT({
       chid: old.channelID,
       alert: [{ text: `${name} moved away from the chat.`, lang, voice }]
     });
   }
+  console.log({ chid: state.channelID, alert: [{ text: alert, lang, voice }] });
   QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang, voice }] });
 });
 
