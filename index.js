@@ -196,6 +196,7 @@ const CLEAR_SPAM = function (BOT) {
 
 /* Zyborg function to play alert */
 const PLAY_NEXT_ALERT = connection => {
+  console.log(AlertQueue[0]);
   if (AlertQueue[0].alert.length) {
     const alert = AlertQueue[0].alert.shift();
     const stream = new PassThrough();
