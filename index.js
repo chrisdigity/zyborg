@@ -7,7 +7,7 @@ const { isModifier, voiceTable } = require('./modifier');
 const { get } = require('http');
 const { PassThrough } = require('stream');
 const { spawn } = require('child_process');
-const { Client, Intents, MessageEmbed } = require('discord.js');
+const { Client, Intents, MessageEmbed, Permissions } = require('discord.js');
 
 /* vars */
 // let Vcurr = 0
@@ -397,17 +397,16 @@ Zyborg.on('ready', () => {
 
 Zyborg.on('messageCreate', message => {
   const member = message.member;
-  // ignore news updates from other servers
-  if (!member) return;
-  // update recently active role if not a bot
-  if (!member.user.bot) RESET_RECENT(member);
+  // ignore news updates from other servers AND bot messages
+  if (!member || member.user.bot) return;
+  else RESET_RECENT(member); // update recently active role if not a bot
   // command messages must be in spam channel
   if (message.channel.id !== CHID_SPAM) return;
   // split message
   const msg = message.content.split(' ');
   // check basic commands
   if (msg[1] && msg[0].toLowerCase() === '_lang') {
-    let name = message.member.nickname || message.member.user.username;
+    let name = member.nickname || member.user.username;
     // modifier removal
     if (name.includes(', [')) {
       name = name.substring(0, name.lastIndexOf(', ['));
@@ -417,7 +416,7 @@ Zyborg.on('messageCreate', message => {
       name = name.substring(0, name.lastIndexOf('['));
     }
     // end modifier removal
-    message.member.setNickname(`${msg[2] || name}, [${msg[1]}]`).then(() => {
+    member.setNickname(`${msg[2] || name}, [${msg[1]}]`).then(() => {
       return message.channel.send(
         'Intro preference embeded in Nickname :thumbup:');
     }).catch(error => {
@@ -426,7 +425,7 @@ Zyborg.on('messageCreate', message => {
     });
   }
   // check admin commands
-  if (!message.member.hasPermission('ADMINISTRATOR')) return;
+  if (!member.permissions & Permissions.FLAGS.ADMINISTRATOR) return;
   if (msg[0].toLowerCase() === '_clearspam') CLEAR_SPAM(Zyborg);
   if (msg[0].toLowerCase() === '_restart') HEROKU_RESTART();
 });
