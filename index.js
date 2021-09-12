@@ -1,13 +1,13 @@
 /* eslint-env node, es6 */
 /* eslint-disable no-console */
 
-import { isModifier, voiceTable } from './modifier';
+const { isModifier, voiceTable } = require('./modifier');
 
 /* required modules */
-import { get } from 'http';
-import { PassThrough } from 'stream';
-import { spawn } from 'child_process';
-import { Client, Intents, MessageEmbed } from 'discord.js';
+const { get } = require('http');
+const { PassThrough } = require('stream');
+const { spawn } = require('child_process');
+const { Client, Intents, MessageEmbed } = require('discord.js');
 
 /* vars */
 // let Vcurr = 0
