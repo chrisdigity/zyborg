@@ -224,7 +224,7 @@ const PLAY_NEXT_ALERT = connection => {
   } else {
     Vactive = false;
     AlertQueue.shift();
-    connection.disconnect();
+    connection.destroy();
     setTimeout(CHECK_ALERTS, 100);
   }
 };
