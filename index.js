@@ -211,11 +211,12 @@ const PLAY_NEXT_ALERT = connection => {
     get(url, res => res.pipe(stream));
     player.play(resource);
     const subscription = connection.subscribe(player);
-    player.on(AudioPlayerStatus.Idle, () => {
+    player.once(AudioPlayerStatus.Idle, () => {
+      console.log('playnext');
       subscription.unsubscribe();
       PLAY_NEXT_ALERT(connection);
     });
-    player.on('error', (err) => {
+    player.once('error', (err) => {
       console.error(err);
       subscription.unsubscribe();
       PLAY_NEXT_ALERT(connection);
