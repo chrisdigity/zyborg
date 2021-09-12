@@ -473,12 +473,12 @@ Zyborg.on('presenceUpdate', (old, cur) => {
 const SelfDeafList = new Set();
 Zyborg.on('voiceStateUpdate', (old, cur) => {
   // ignore ALL bot movements
-  const state = cur.channelID ? cur : old;
+  const state = cur.channelId ? cur : old;
   const member = state.member;
   if (member.user.bot) return;
-console.log(1);
+
   // deafened users are forced AFK because reasons
-  if (cur.channelID && cur.selfDeaf) {
+  if (cur.channelId && cur.selfDeaf) {
     SelfDeafList.add(cur.id); // place member on the silent warning list.
     setTimeout(async () => { // if, after 20 seconds, user remains on list...
       if (SelfDeafList.has(cur.id)) cur.setChannel(CHID_AFK); // ... set AFK
@@ -486,27 +486,24 @@ console.log(1);
     }, 20000);
   } else SelfDeafList.delete(cur.id);
 
-  console.log(2);
   /* determine action */
   let action = 'moved to'; // default
-  if (!old.channelID) action = 'joined';
-  else if (!cur.channelID) action = 'left';
+  if (!old.channelId) action = 'joined';
+  else if (!cur.channelId) action = 'left';
   else if (old.streaming && !cur.streaming) action = 'regressed';
   else if (cur.streaming && !old.streaming) action = 'streaming';
-  else if (old.channelID === cur.channelID) return;
+  else if (old.channelId === cur.channelId) return;
   // ^return - ignores all other 'same-channel' actions
 
-  console.log(3);
   // update recently active role if not a bot
   RESET_RECENT(member);
   // update voice presence
   UPDATE_USER(member.id, {
-    voiceFrom: old.channelID,
-    voiceTo: cur.channelID,
+    voiceFrom: old.channelId,
+    voiceTo: cur.channelId,
     voiceTime: Date.now()
   });
 
-  console.log(4);
   // queue extra action advise
   let alert, voice, lang;
   // obtain name ( using nickname as preference )
@@ -528,7 +525,6 @@ console.log(1);
     lang = 'en-au';
     voice = 'isla';
   }
-  console.log(5);
   if (action === 'streaming') {
     const activityName = member.presence.activities.find(activity => {
       return Boolean(activity.type === 'STREAMING');
@@ -539,17 +535,17 @@ console.log(1);
   } else alert = `${name} ${action} the chat.`;
   // additional leave alert, first?
   if (action === 'moved to') {
-    console.log({
-      chid: old.channelID,
+    console.log('moved to', {
+      chid: old.channelId,
       alert: [{ text: `${name} moved away from the chat.`, lang, voice }]
     });
     QUEUE_ALERT({
-      chid: old.channelID,
+      chid: old.channelId,
       alert: [{ text: `${name} moved away from the chat.`, lang, voice }]
     });
   }
-  console.log({ chid: state.channelID, alert: [{ text: alert, lang, voice }] });
-  QUEUE_ALERT({ chid: state.channelID, alert: [{ text: alert, lang, voice }] });
+  console.log({ chid: state.channelId, alert: [{ text: alert, lang, voice }] });
+  QUEUE_ALERT({ chid: state.channelId, alert: [{ text: alert, lang, voice }] });
 });
 
 // clean shutdown and restart on SIGTERM
