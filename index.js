@@ -392,10 +392,10 @@ Zyborg.on('ready', () => {
   // clear spam channel
   CLEAR_SPAM(Zyborg);
   // check freebies channel
-  CHECK_FREEBIES();
+  // CHECK_FREEBIES();
 });
 
-Zyborg.on('message', message => {
+Zyborg.on('messageCreate', message => {
   const member = message.member;
   // ignore news updates from other servers
   if (!member) return;
