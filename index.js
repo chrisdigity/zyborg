@@ -210,9 +210,16 @@ const PLAY_NEXT_ALERT = connection => {
       '&c=mp3&f=48khz_16bit_stereo&src=' + encodeURIComponent(alert.text);
     get(url, res => res.pipe(stream));
     player.play(resource);
-    player.on(AudioPlayerStatus.Idle, () => PLAY_NEXT_ALERT(connection));
-    player.on('error', () => PLAY_NEXT_ALERT(connection));
-    connection.subscribe(player);
+    const subscription = connection.subscribe(player);
+    player.on(AudioPlayerStatus.Idle, () => {
+      subscription.unsubscribe();
+      PLAY_NEXT_ALERT(connection);
+    });
+    player.on('error', (err) => {
+      console.error(err);
+      subscription.unsubscribe();
+      PLAY_NEXT_ALERT(connection);
+    });
   } else {
     Vactive = false;
     AlertQueue.shift();
