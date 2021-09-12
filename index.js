@@ -8,6 +8,14 @@ const { get } = require('http');
 const { PassThrough } = require('stream');
 const { spawn } = require('child_process');
 const { Client, Intents, MessageEmbed, Permissions } = require('discord.js');
+const {
+  AudioPlayerStatus,
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+  NoSubscriberBehavior,
+  VoiceConnectionStatus
+} = require('@discordjs/voice');
 
 /* vars */
 // let Vcurr = 0
@@ -191,14 +199,19 @@ const PLAY_NEXT_ALERT = connection => {
   if (AlertQueue[0].alert.length) {
     const alert = AlertQueue[0].alert.shift();
     const stream = new PassThrough();
+    const resource = createAudioResource(stream);
+    const player = createAudioPlayer({
+      behaviors: { noSubscriber: NoSubscriberBehavior.Pause }
+    });
     const url = 'http://api.voicerss.org/?key=' + process.env.VOICERSS_TOKEN +
       '&hl=' + encodeURIComponent(alert.lang) +
       (alert.voice ? '&v=' + encodeURIComponent(alert.voice) : '') +
       '&c=mp3&f=48khz_16bit_stereo&src=' + encodeURIComponent(alert.text);
     get(url, res => res.pipe(stream));
-    const dispatcher = connection.play(stream);
-    dispatcher.on('finish', () => PLAY_NEXT_ALERT(connection));
-    dispatcher.on('error', () => PLAY_NEXT_ALERT(connection));
+    player.play(resource);
+    player.on(AudioPlayerStatus.Idle, () => PLAY_NEXT_ALERT(connection));
+    player.on('error', () => PLAY_NEXT_ALERT(connection));
+    connection.subscribe(player);
   } else {
     Vactive = false;
     AlertQueue.shift();
@@ -211,22 +224,25 @@ const PLAY_NEXT_ALERT = connection => {
 const CHECK_ALERTS = () => {
   if (!Vactive && AlertQueue.length) {
     Vactive = true;
-    Zyborg.channels.fetch(AlertQueue[0].chid).then(channel => {
-      channel.join().then(PLAY_NEXT_ALERT).catch(console.error).finally(() => {
-        HEROKU_RESTART(); // restart bot, restart rotation may be bad...
-      });
-    }).catch(BOT_ERROR);
+    const connection = joinVoiceChannel({
+      channelId: AlertQueue[0].channel.id,
+      guildId: AlertQueue[0].channel.guild.id,
+      adapterCreator: AlertQueue[0].channel.guild.voiceAdapterCreator
+    });
+    connection.on(VoiceConnectionStatus.Ready, () => {
+      PLAY_NEXT_ALERT(connection);
+    });
   }
 };
 
 /* Zyborg function to queue next alert */
 const QUEUE_ALERT = function (next) {
   // ignore NOINTRO channels
-  if (CHIDS_NOINTRO.includes(next.chid)) return;
+  if (CHIDS_NOINTRO.includes(next.channel.id)) return;
   // scan queue to stack alerts, otherwise append...
   let i;
   for (i = 0; i < AlertQueue.length; i++) {
-    if (AlertQueue[i].chid === next.chid) {
+    if (AlertQueue[i].channel.id === next.channel.id) {
       AlertQueue[i].alert.push(...next.alert);
       break;
     }
@@ -535,17 +551,15 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
   } else alert = `${name} ${action} the chat.`;
   // additional leave alert, first?
   if (action === 'moved to') {
-    console.log('moved to', {
-      chid: old.channelId,
-      alert: [{ text: `${name} moved away from the chat.`, lang, voice }]
-    });
     QUEUE_ALERT({
-      chid: old.channelId,
+      channel: old.channel,
       alert: [{ text: `${name} moved away from the chat.`, lang, voice }]
     });
   }
-  console.log({ chid: state.channelId, alert: [{ text: alert, lang, voice }] });
-  QUEUE_ALERT({ chid: state.channelId, alert: [{ text: alert, lang, voice }] });
+  QUEUE_ALERT({
+    channel: state.channel,
+    alert: [{ text: alert, lang, voice }]
+  });
 });
 
 // clean shutdown and restart on SIGTERM
