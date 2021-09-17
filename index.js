@@ -546,10 +546,9 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
     voice = 'isla';
   }
   if (action === 'streaming') {
-    console.log(member.presence.activities);
     const activityName = member.presence.activities.find(activity => {
-      return Boolean(activity.type === 'STREAMING');
-    }) || 'something';
+      return Boolean(activity.type === 'PLAYING');
+    }).name || 'something';
     alert = `${name} started streaming ${activityName}.`;
   } else if (action === 'regressed') {
     alert = `${name} stopped streaming.`;
