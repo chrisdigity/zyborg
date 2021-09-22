@@ -545,6 +545,11 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
     lang = 'en-au';
     voice = 'isla';
   }
+  // decode erroneous repetition
+  if (name.match(/(.{2,})[ ]?\1+/)) {
+    name += `(a-k-a; ${name.replace(/(.{2,})[ ]?\1+/, '$1')})`;
+  }
+  // detect action
   if (action === 'streaming') {
     const activity = member.presence.activities.find(activity => {
       return Boolean(activity.type === 'PLAYING');
