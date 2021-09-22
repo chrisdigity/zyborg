@@ -547,7 +547,9 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
   }
   // decode erroneous repetition
   if (name.match(/(.{2,})[ ]\1+/gi) || name.match(/(.{2,})\1{2,}/gi)) {
-    name += `(ay kay ay; ${name.replace(/(.{2,})[ ]?\1+/, '$1').replace(/(.{2})\1+/, '$1')})`;
+    let akaname = name.replace(/(.{2,})[ ]?\1+/gi, '$1');
+    akaname = akaname.replace(/(.{2})\1+/gi, '$1');
+    name += `(ay kay ay; ${akaname})`;
   }
   // detect action
   if (action === 'streaming') {
