@@ -185,8 +185,8 @@ const CLEAR_SPAM = function (BOT) {
                 name: 'Introduction Pronunciation, prefix: ( _ )',
                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
               }, {
-                name: 'Colour Preference, prefix: ( _ ) [Must be <#783529467846721536>]',
-                value: 'Colours: red green blue cyan yellow magenta\n```_colour magenta\n_colour clear```'
+                name: 'Colour Preference, prefix: ( _ )',
+                value: '*Available to Graphene rank.*\nColours: red green blue cyan yellow magenta\n```_colour magenta\n_colour clear```'
               }).setTimestamp()
           ]
         }).catch(console.error);
