@@ -445,8 +445,8 @@ Zyborg.on('messageCreate', message => {
     });
   } else if (msg[1] && ['_color', '_colour'].indexOf(msg[0]) > -1) {
     // check graphene rank
-    if (member.roles.find(role => role.name === 'Graphene')) {
-      function getRoleByName(name) {
+    if (member.roles.cache.find(role => role.name === 'Graphene')) {
+      function getRoleByName (name) {
         const role = member.guild.roles.cache.find(role => role.name === name);
         return role && typeof role === 'object' ? role.id : null;
       }
@@ -459,19 +459,18 @@ Zyborg.on('messageCreate', message => {
         cyan: getRoleByName('Cyan'),
         blue: getRoleByName('Blue')
       };
-      // determine if appropriate color was chosen...
-      if (Object.keys(colorIds).indexOf(msg[1].toLowerCase()) < 0) {
-        message.reply(`Sorry, ${msg[1]} is not an available colour...`);
-      } else { // swapcolor rank
-        const hasColors = Object.values(colorIds).filter(roleId => {
-          return member.roles.cache.has(roleId);
-        }); // remove existing color/s
-        member.roles.remove(hasColors).then(member => {
+      const hasColors = Object.values(colorIds).filter(roleId => {
+        return member.roles.cache.has(roleId);
+      }); // remove existing color/s
+      member.roles.remove(hasColors).then(member => {
+        if (Object.keys(colorIds).indexOf(msg[1].toLowerCase()) > -1) {
           return member.roles.add(colorIds[msg[1].toLowerCase()]);
-        }).catch(error => {
-          return message.reply(`Colour Preference failed: ${error}`);
-        }).catch(console.error);
-      }
+        } else if (msg[1].toLowerCase() === 'clear') {
+          return message.reply('Colour preference cleared...');
+        } else return message.reply('Colour preference unknown...');
+      }).catch(error => {
+        return message.reply(`Colour Preference failed: ${error}`);
+      }).catch(console.error);
     }
   }
   // check admin commands
