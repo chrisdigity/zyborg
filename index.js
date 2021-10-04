@@ -186,7 +186,7 @@ const CLEAR_SPAM = function (BOT) {
                 value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
               }, {
                 name: 'Colour Preference, prefix: ( _ ) [Must be <#783529467846721536>]',
-                value: 'Colours: blue cyan green yellow red magenta\n```_colour cyan\n_colour clear```'
+                value: 'Colours: red green blue cyan yellow magenta\n```_colour magenta\n_colour clear```'
               }).setTimestamp()
           ]
         }).catch(console.error);
@@ -459,14 +459,17 @@ Zyborg.on('messageCreate', message => {
         cyan: getRoleByName('Cyan'),
         blue: getRoleByName('Blue')
       };
+      const addColor = colorIds[msg[1].toLowerCase()] || [];
       const hasColors = Object.values(colorIds).filter(roleId => {
         return member.roles.cache.has(roleId);
       }); // remove existing color/s
       member.roles.remove(hasColors).then(member => {
         if (Object.keys(colorIds).indexOf(msg[1].toLowerCase()) > -1) {
-          return member.roles.add(colorIds[msg[1].toLowerCase()]);
+          return member.roles.add(addColor).then(() => {
+            return message.reply('Colour preference changed successfully.');
+          });
         } else if (msg[1].toLowerCase() === 'clear') {
-          return message.reply('Colour preference cleared...');
+          return message.reply('Colour preference cleared.');
         } else return message.reply('Colour preference unknown...');
       }).catch(error => {
         return message.reply(`Colour Preference failed: ${error}`);
