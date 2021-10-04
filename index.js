@@ -179,14 +179,14 @@ const CLEAR_SPAM = function (BOT) {
               .setDescription('Available bot commands.')
               .setThumbnail('https://discord.com/assets/f9bb9c4af2b9c32a2c5ee0014661546d.png')
               .addFields({
-                name: 'Introduction Bot, prefix: ( _ )',
-                value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
-              }, {
-                name: 'Leveling Bot, prefix: ( > )',
+                name: 'Leveling, prefix: ( > )',
                 value: 'View Leaderboard here: https://dash.gaiusbot.me/leaderboard/178819240227373056\n```>leaderboard me\n>level```'
               }, {
-                name: 'Musit Bot, prefix: ( ! )',
-                value: 'Web App: https://rythm.fm/app/\nMore commands here: https://rythm.fm/docs/commands/\n```!play (link or search query)\n!next\n!stop```'
+                name: 'Introduction Pronunciation, prefix: ( _ )',
+                value: 'Test voices here: http://www.voicerss.org/api/demo.aspx\n```_lang Josef\n_lang cs-cz```'
+              }, {
+                name: 'Colour Preference, prefix: ( _ ) [Must be <#783529467846721536>]',
+                value: 'Colours: blue cyan green yellow red magenta\n```_colour cyan\n_colour clear```'
               }).setTimestamp()
           ]
         }).catch(console.error);
@@ -443,6 +443,36 @@ Zyborg.on('messageCreate', message => {
       console.error(error);
       message.channel.send(error.message).catch(console.error);
     });
+  } else if (msg[1] && ['_color', '_colour'].indexOf(msg[0]) > -1) {
+    // check graphene rank
+    if (member.roles.find(role => role.name === 'Graphene')) {
+      function getRoleByName(name) {
+        const role = member.guild.roles.cache.find(role => role.name === name);
+        return role && typeof role === 'object' ? role.id : null;
+      }
+      // define colors
+      const colorIds = {
+        magenta: getRoleByName('Magenta'),
+        red: getRoleByName('Red'),
+        yellow: getRoleByName('Yellow'),
+        green: getRoleByName('Green'),
+        cyan: getRoleByName('Cyan'),
+        blue: getRoleByName('Blue')
+      };
+      // determine if appropriate color was chosen...
+      if (Object.keys(colorIds).indexOf(msg[1].toLowerCase()) < 0) {
+        message.reply(`Sorry, ${msg[1]} is not an available colour...`);
+      } else { // swapcolor rank
+        const hasColors = Object.values(colorIds).filter(roleId => {
+          return member.roles.cache.has(roleId);
+        }); // remove existing color/s
+        member.roles.remove(hasColors).then(member => {
+          return member.roles.add(colorIds[msg[1].toLowerCase()]);
+        }).catch(error => {
+          return message.reply(`Colour Preference failed: ${error}`);
+        }).catch(console.error);
+      }
+    }
   }
   // check admin commands
   if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
