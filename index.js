@@ -552,7 +552,7 @@ Zyborg.on('messageCreate', message => {
           ).then(sent => {
             // add reactions to message
             for (let i = 0; i < json.rewards.length; i++) {
-              sent.react(`\\${reactionIds[i]}`).catch(error => {
+              sent.react(reactionIds[i]).catch(error => {
                 message.reply(
                   `Error adding reaction "${reactionIds[i]}": ${error}`
                 ).catch(console.error);
