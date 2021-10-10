@@ -487,6 +487,7 @@ Zyborg.on('messageCreate', message => {
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
     // likely freebies submission, try JSON conversion
     try {
+      console.log(`message.content: "${message.content}"`);
       const json = JSON.parse(message.content);
       // check json data meets all requirements
       if (typeof json !== 'object') {
