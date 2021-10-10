@@ -491,12 +491,10 @@ Zyborg.on('messageCreate', message => {
       // check json data meets all requirements
       if (!json || typeof json !== 'object') {
         message.reply('Invalid JSON').catch(console.error);
-      } else if (!json.uid || typeof json.uid !== 'string') {
-        message.reply('Invalid [uid]').catch(console.error);
       } else if (!json.title || typeof json.title !== 'string') {
         message.reply('Invalid [title]').catch(console.error);
-      } else if (!json.desc || typeof json.desc !== 'string') {
-        message.reply('Invalid [desc]').catch(console.error);
+      } else if (!json.description || typeof json.description !== 'string') {
+        message.reply('Invalid [description]').catch(console.error);
       } else if (!Array.isArray(json.rewards) || json.rewards.length < 1) {
         message.reply('Invalid [rewards]').catch(console.error);
       } else {
@@ -533,7 +531,7 @@ Zyborg.on('messageCreate', message => {
           }
           freebiesCh.send(
             '*a wild freebie raffle has appeared...*\n\n' +
-            `__**${json.title}**__\n` + `${json.desc}\n\n` +
+            `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             'To enter, simply "react" with the rewards\'s emoji.\n' +
             'You may react to all rewards, however, you can only win ONE.\n' +
