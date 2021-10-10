@@ -636,7 +636,7 @@ Zyborg.on('messageCreate', message => {
           }
           freebiesCh.send(
             '*a wild freebie offer has appeared...*\n\n' +
-            `${FREEBIEKEY} ${date.getTime()}/${message.id}\n\n` +
+            `${FREEBIEKEY} ${date.getTime()} / ${message.id}\n\n` +
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             '• To enter, simply "react" with the reward\'s emoji.\n' +
@@ -645,7 +645,7 @@ Zyborg.on('messageCreate', message => {
               : '') +
             `• Winners are drawn after ${dateStr}, ` +
             `prioritising <@&${activeRoleId}> members.\n\n` +
-            `${REWARDSKEY}\n${rewardsStr}\n\n` + 'Good Luck!'
+            `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!'
           ).then(sent => {
             // add reactions to message
             for (let i = 0; i < json.rewards.length; i++) {
