@@ -7,7 +7,13 @@ const { isModifier, voiceTable } = require('./modifier');
 const { get } = require('http');
 const { PassThrough } = require('stream');
 const { spawn } = require('child_process');
-const { Client, Intents, MessageEmbed, Permissions } = require('discord.js');
+const {
+  Client,
+  Collection,
+  Intents,
+  MessageEmbed,
+  Permissions
+} = require('discord.js');
 const {
   AudioPlayerStatus,
   createAudioPlayer,
@@ -39,8 +45,13 @@ const JOINED = '*joined* <#';
 const LEFT = '*left* <#';
 const FROM = '*from* <#';
 const TO = '*to* <#';
-const ENDSEPOCHKEY = '__**EndsEpoch:**__';
 const ENDEDKEY = '__**ENDED:**__';
+const FREEBIEKEY = '__**Freebie:**__';
+const REWARDSKEY = '__**Rewards:**__';
+const FreebieEmojis = [
+  '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣',
+  '🇦', '🇧', '🇨', '🇩', '🇪', '🇫'
+];
 
 const MS = {
   day: 1000 * 60 * 60 * 24,
@@ -133,10 +144,21 @@ const RESET_RECENT = (member) => {
 /* function to check for new day and process daily functions */
 const LastHour = new Date().getHours();
 const HourlyChecks = function (BOT) {
-  let i = 0; // loop iterator
-  const now = Date.now(); // now timestamp
-  // check freebies channel for ending freebies
+  // for each guild the bot is apart of...
   BOT.guilds.cache.each(guild => {
+    let i = 0; // loop iterator
+    const now = Date.now(); // now timestamp
+    const getRoleIdByName = (name) => {
+      return (guild.roles.cache.find(r => r.name === name) || { id: 0 }).id;
+    };// define recently active role ids
+    const rActiveRoleId = getRoleIdByName('Recently Active');
+    const rARoleIds = [
+      getRoleIdByName('9 æons ago'), getRoleIdByName('8 æons ago'),
+      getRoleIdByName('7 æons ago'), getRoleIdByName('6 æons ago'),
+      getRoleIdByName('5 æons ago'), getRoleIdByName('4 æons ago'),
+      getRoleIdByName('3 æons ago'), getRoleIdByName('2 æons ago'),
+      getRoleIdByName('1 æons ago')
+    ];
     const getChannelWhereNameIncludes = (name) => {
       return guild.channels.cache.find(channel => channel.name.includes(name));
     };
@@ -144,48 +166,91 @@ const HourlyChecks = function (BOT) {
     const freebiesChannel = getChannelWhereNameIncludes('freebies');
     if (freebiesChannel && freebiesChannel.type === 'GUILD_TEXT') {
       // scan messages of freebies in channel
-      freebiesChannel.messages.cache.each(message => {
+      freebiesChannel.messages.cache.each(freebieMsg => {
         // split message content into lines of readable data
-        const messageLines = message.content.split('\n');
-        const getLineIndexWhereLineIncludes = (str) => {
-          return messageLines.indexOf(messageLines.find(s => s.includes(str)));
+        const msgLines = freebieMsg.content.split('\n');
+        const getLineIndexWhereLineStartsWith = (str) => {
+          return msgLines.findIndex(line => line.startsWith(str));
         };
-        // scan lines for indication of recently ended freebie
-        const endsIndex = getLineIndexWhereLineIncludes(ENDSEPOCHKEY);
-        if (endsIndex > -1) { // check end epoch...
-          const endsEpoch = Number(messageLines[endsIndex].split(' ')[1]);
-          if (endsEpoch < now) {
-            // RUN THE NUMBERS STEVE! Get reactions...
-            console.log('ENDSEPOCH TRIGGERED!!!');
-          }
+        const getLineIndexWhereLineIncludes = (str) => {
+          return msgLines.findIndex(line => line.includes(str));
+        };
+        // get index of FreebieID and split ID values into fId
+        const fIdIdx = getLineIndexWhereLineIncludes(FREEBIEKEY);
+        const fId = (msgLines[fIdIdx] || '').split(' ');
+        // obtain epoch and submissionId from fId
+        const epoch = Number(fId[1]);
+        const submissionId = fId[3];
+        // check freebies that have ended by checking epoch
+        if (epoch && epoch < now) {
+          console.log('FREEBIE ENDED!!! RUN THE NUMBERS STEVE!');
+          msgLines[fIdIdx] = msgLines[fIdIdx].replace(FREEBIEKEY, ENDEDKEY);
+          // read submission message as json
+          const submissionCh = getChannelWhereNameIncludes('submit-freebies');
+          submissionCh.messages.fetch(submissionId).then(submissionMessage => {
+            const json = JSON.parse(submissionMessage);
+            const rewards = new Collection();
+            const winnerIds = []; // keep record of winners, by user.Iid
+            // add reaction emoji and rewards as key value pairs in collection
+            for (i = 0; i < json.rewards.length; i++) {
+              rewards.set(FreebieEmojis[i], json.rewards[i]);
+            }
+            // process all options randomly
+            while (rewards.size) {
+              const rewardsKey = rewards.randomKey();
+              const reward = rewards[rewardsKey];
+              let [activeCandidates, candidates] =
+                freebieMsg.reactions.cache.find(reaction => {
+                  return reaction.emoji === rewardsKey; // get reaction users
+                })?.users.cache.filter(user => !user.bot // ... excluding bots
+                ).filter(user => winnerIds.includes(user.id) // ... and winners
+                ).partition(user => { // ... and split users by recently active
+                  return guild.members.fetch(user.id).roles.has(rActiveRoleId);
+                });
+              // overwrite candidates with active candidates, if any
+              if (activeCandidates && activeCandidates.size > 0) {
+                candidates = activeCandidates;
+              } // select random candidate and add to winners, if any
+              if (candidates && candidates.size) {
+                const winner = candidates.random();
+                winnerIds.push(winner.id);
+                // edit associated reward line with winner
+                const rewardLine = getLineIndexWhereLineStartsWith(rewardsKey);
+                msgLines[rewardLine] =
+                  `~~${msgLines[rewardLine]}~~\n^^ Winner: ${winner}`;
+                // DM user with reward
+                winner.send(
+                  '*For your safety, NEVER click links or share passwords ' +
+                  'and login information to bots in messages. Please use ' +
+                  'Links provided in the Z Unbreakables Server.*\n\n' +
+                  '**CONGRATULATIONS!** You have received a reward ' +
+                  'from __Z Unbreakables__ Server Freebies Channel.\n\n' +
+                  `__**Reward:**__ ${reward.name}\n` +
+                  `__**Key:**__ ||${reward.key}||`
+                ).catch(error => submissionCh.send(
+                  `@Admin, Failed to send __${reward.name}__ reward key ` +
+                  `to user ${winner} -> ${winner.tag}; ${error}`
+                )).catch(console.error);
+              }
+              // drop reward from collection and continue
+              rewards.delete(rewardsKey);
+            }
+            // send edited freebies message
+            freebieMsg.edit(msgLines.join('\n')).catch(console.error);
+          }).catch(console.error);
         }
       });
     }
-  });
-  // check new day trigger
-  if (new Date().getHours() < LastHour) {
-    BOT.guilds.cache.each(guild => {
-      const getRoleIdByName = (name) => {
-        return (guild.roles.cache.find(r => r.name === name) || { id: 0 }).id;
-      };
-      // define recently active role ids
-      const rActiveRoleId = getRoleIdByName('Recently Active');
-      const rARoleIds = [
-        getRoleIdByName('9 æons ago'), getRoleIdByName('8 æons ago'),
-        getRoleIdByName('7 æons ago'), getRoleIdByName('6 æons ago'),
-        getRoleIdByName('5 æons ago'), getRoleIdByName('4 æons ago'),
-        getRoleIdByName('3 æons ago'), getRoleIdByName('2 æons ago'),
-        getRoleIdByName('1 æons ago')
-      ];
+    // check new day trigger - progress recently active
+    if (new Date().getHours() < LastHour) {
       // for every member of this guild, progress recently active status
       guild.members.cache.each(gMember => {
         // only process members with Recently Active role
         if (gMember.roles.cache.has(rActiveRoleId)) {
-          // find aeons ago
+        // find aeons ago
           for (i = 0; i < rARoleIds.length; i++) {
             if (gMember.roles.cache.has(rARoleIds[i])) break;
-          }
-          // check final aeons ago, remove recently active role
+          } // check final aeons ago, remove recently active role
           if (i === 0) gMember.roles.remove(rActiveRoleId).catch(console.error);
           // check progressable aeons ago, add next / remove previous
           if (i > 0) gMember.roles.add(rARoleIds[i - 1]).catch(console.error);
@@ -194,8 +259,8 @@ const HourlyChecks = function (BOT) {
           }
         }
       });
-    });
-  }
+    }
+  });
 };
 
 /* ZYBORG function to clear spam channel every ~24 hours */
@@ -565,32 +630,28 @@ Zyborg.on('messageCreate', message => {
           const findActiveRole = (role) => role.name === 'Recently Active';
           const activeRoleId =
             (rolesCache.find(findActiveRole) || { id: 0 }).id;
-          const unicodeReactions = [
-            '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣',
-            '🇦', '🇧', '🇨', '🇩', '🇪', '🇫'
-          ];
           for (let i = 0; i < json.rewards.length; i++) {
             const reward = json.rewards[i];
-            rewardsStr += `${unicodeReactions[i]} ${reward.name}\n`;
+            rewardsStr += `${FreebieEmojis[i]} ${reward.name}\n`;
           }
           freebiesCh.send(
             '*a wild freebie offer has appeared...*\n\n' +
+            `${FREEBIEKEY} ${date.getTime()}/${message.id}\n\n` +
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             '• To enter, simply "react" with the reward\'s emoji.\n' +
-            '• You may react to all rewards, but you can only win ONE.\n' +
-            `• Rewards will be distributed after ${dateStr}, ` +
-            'via a Cryptographically Secure RNG process, ' +
+            (json.rewards.length > 1 // conditional rule for > 1 rewards
+              ? '• You may react to all rewards, but you can only win ONE.\n'
+              : '') +
+            `• Winners are drawn after ${dateStr}, ` +
             `prioritising <@&${activeRoleId}> members.\n\n` +
-            '__**Rewards:**__\n' + rewardsStr +
-            `${ENDSEPOCHKEY} ${date.getTime()}\n` +
-            '\nGood Luck!'
+            `${REWARDSKEY}\n${rewardsStr}\n\n` + 'Good Luck!'
           ).then(sent => {
             // add reactions to message
             for (let i = 0; i < json.rewards.length; i++) {
-              sent.react(unicodeReactions[i]).catch(error => {
+              sent.react(FreebieEmojis[i]).catch(error => {
                 message.reply(
-                  `Error adding reaction "${unicodeReactions[i]}": ${error}`
+                  `Error adding reaction "${FreebieEmojis[i]}": ${error}`
                 ).catch(console.error);
               });
             }
