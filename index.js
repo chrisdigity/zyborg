@@ -39,6 +39,13 @@ const JOINED = '*joined* <#';
 const LEFT = '*left* <#';
 const FROM = '*from* <#';
 const TO = '*to* <#';
+const ENDSEPOCHKEY = '__**EndsEpoch:**__';
+const ENDEDKEY = '__**ENDED:**__';
+
+const MS = {
+  day: 1000 * 60 * 60 * 24,
+  hour: 1000 * 60 * 60
+};
 
 /* Channel IDs */
 const CHID_SPAM = '675644867447095296';
@@ -123,44 +130,77 @@ const RESET_RECENT = (member) => {
   if (!member.roles.cache.has(RID_ACTIVE)) member.roles.add(RID_ACTIVE);
 };
 
+/* function to check for new day and process daily functions */
+const LastHour = new Date().getHours();
+const HourlyChecks = function (BOT) {
+  let i = 0; // loop iterator
+  const now = Date.now(); // now timestamp
+  // check freebies channel for ending freebies
+  BOT.guilds.cache.each(guild => {
+    const getChannelWhereNameIncludes = (name) => {
+      return guild.channels.cache.find(channel => channel.name.includes(name));
+    };
+    // check guild has a freebies channel (text channel)
+    const freebiesChannel = getChannelWhereNameIncludes('freebies');
+    if (freebiesChannel && freebiesChannel.type === 'GUILD_TEXT') {
+      // scan messages of freebies in channel
+      freebiesChannel.messages.cache.each(message => {
+        // split message content into lines of readable data
+        const messageLines = message.content.split('\n');
+        const getLineIndexWhereLineIncludes = (str) => {
+          return messageLines.indexOf(messageLines.find(s => s.includes(str)));
+        };
+        // scan lines for indication of recently ended freebie
+        const endsIndex = getLineIndexWhereLineIncludes(ENDSEPOCHKEY);
+        if (endsIndex > -1) { // check end epoch...
+          const endsEpoch = Number(messageLines[endsIndex].split(' ')[1]);
+          if (endsEpoch < now) {
+            // RUN THE NUMBERS STEVE! Get reactions...
+            console.log('ENDSEPOCH TRIGGERED!!!');
+          }
+        }
+      });
+    }
+  });
+  // check new day trigger
+  if (new Date().getHours() < LastHour) {
+    BOT.guilds.cache.each(guild => {
+      const getRoleIdByName = (name) => {
+        return (guild.roles.cache.find(r => r.name === name) || { id: 0 }).id;
+      };
+      // define recently active role ids
+      const rActiveRoleId = getRoleIdByName('Recently Active');
+      const rARoleIds = [
+        getRoleIdByName('9 æons ago'), getRoleIdByName('8 æons ago'),
+        getRoleIdByName('7 æons ago'), getRoleIdByName('6 æons ago'),
+        getRoleIdByName('5 æons ago'), getRoleIdByName('4 æons ago'),
+        getRoleIdByName('3 æons ago'), getRoleIdByName('2 æons ago'),
+        getRoleIdByName('1 æons ago')
+      ];
+      // for every member of this guild, progress recently active status
+      guild.members.cache.each(gMember => {
+        // only process members with Recently Active role
+        if (gMember.roles.cache.has(rActiveRoleId)) {
+          // find aeons ago
+          for (i = 0; i < rARoleIds.length; i++) {
+            if (gMember.roles.cache.has(rARoleIds[i])) break;
+          }
+          // check final aeons ago, remove recently active role
+          if (i === 0) gMember.roles.remove(rActiveRoleId).catch(console.error);
+          // check progressable aeons ago, add next / remove previous
+          if (i > 0) gMember.roles.add(rARoleIds[i - 1]).catch(console.error);
+          if (i < rARoleIds.length) {
+            gMember.roles.remove(rARoleIds[i]).catch(console.error);
+          }
+        }
+      });
+    });
+  }
+};
+
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function (BOT) {
   BOT.channels.fetch(CHID_SPAM).then(channel => {
-    // for every member of this channel (should be everyone)...
-    channel.members.each(member => {
-      // ... remove recently active role, if present
-      if (member.roles.cache.has(RID_ACTIVE)) {
-        // advance level of activity
-        if (member.roles.cache.has(RID_9AGO)) {
-          member.roles.remove(RID_9AGO);
-          member.roles.remove(RID_ACTIVE);
-        } else if (member.roles.cache.has(RID_8AGO)) {
-          member.roles.remove(RID_8AGO);
-          member.roles.add(RID_9AGO);
-        } else if (member.roles.cache.has(RID_7AGO)) {
-          member.roles.remove(RID_7AGO);
-          member.roles.add(RID_8AGO);
-        } else if (member.roles.cache.has(RID_6AGO)) {
-          member.roles.remove(RID_6AGO);
-          member.roles.add(RID_7AGO);
-        } else if (member.roles.cache.has(RID_5AGO)) {
-          member.roles.remove(RID_5AGO);
-          member.roles.add(RID_6AGO);
-        } else if (member.roles.cache.has(RID_4AGO)) {
-          member.roles.remove(RID_4AGO);
-          member.roles.add(RID_5AGO);
-        } else if (member.roles.cache.has(RID_3AGO)) {
-          member.roles.remove(RID_3AGO);
-          member.roles.add(RID_4AGO);
-        } else if (member.roles.cache.has(RID_2AGO)) {
-          member.roles.remove(RID_2AGO);
-          member.roles.add(RID_3AGO);
-        } else if (member.roles.cache.has(RID_1AGO)) {
-          member.roles.remove(RID_1AGO);
-          member.roles.add(RID_2AGO);
-        } else member.roles.add(RID_1AGO);
-      }
-    });
     /* featch messages from channel */
     channel.messages.fetch().then(messages => {
       /* if more than 1 message ... */
@@ -411,8 +451,8 @@ Zyborg.on('ready', () => {
   }).catch(console.error);
   // clear spam channel
   CLEAR_SPAM(Zyborg);
-  // check freebies channel
-  // CHECK_FREEBIES();
+  // start HourlyChecks
+  setInterval(HourlyChecks.bind(null, Zyborg), MS.hour);
 });
 
 Zyborg.on('messageCreate', message => {
@@ -492,6 +532,8 @@ Zyborg.on('messageCreate', message => {
       // check json data meets all requirements
       if (!json || typeof json !== 'object') {
         message.reply('Invalid JSON').catch(console.error);
+      } else if (!json.epoch || typeof json.epoch !== 'number') {
+        message.reply('Invalid [epoch]').catch(console.error);
       } else if (!json.title || typeof json.title !== 'string') {
         message.reply('Invalid [title]').catch(console.error);
       } else if (!json.description || typeof json.description !== 'string') {
@@ -517,10 +559,9 @@ Zyborg.on('messageCreate', message => {
         } else {
           // build rewards string
           let rewardsStr = '';
-          const date = new Date();
-          const drawDateOpts = { dateStyle: 'full', timeStyle: 'long' };
-          const drawDateStr =
-            new Intl.DateTimeFormat('en-AU', drawDateOpts).format(date);
+          const date = new Date(json.epoch);
+          const opts = { dateStyle: 'full', timeStyle: 'long' };
+          const dateStr = new Intl.DateTimeFormat('en-AU', opts).format(date);
           const findActiveRole = (role) => role.name === 'Recently Active';
           const activeRoleId =
             (rolesCache.find(findActiveRole) || { id: 0 }).id;
@@ -538,11 +579,11 @@ Zyborg.on('messageCreate', message => {
             '__**Rules:**__\n' +
             '• To enter, simply "react" with the reward\'s emoji.\n' +
             '• You may react to all rewards, but you can only win ONE.\n' +
-            `• Rewards will be distributed after ${drawDateStr}, ` +
+            `• Rewards will be distributed after ${dateStr}, ` +
             'via a Cryptographically Secure RNG process, ' +
             `prioritising <@&${activeRoleId}> members.\n\n` +
-            '__**Rewards:**__\n' + rewardsStr + 
-            `__**Timestamp:**__ ${date.getTime()}\n` +
+            '__**Rewards:**__\n' + rewardsStr +
+            `${ENDSEPOCHKEY} ${date.getTime()}\n` +
             '\nGood Luck!'
           ).then(sent => {
             // add reactions to message
