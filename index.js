@@ -586,6 +586,7 @@ Zyborg.on('messageCreate', message => {
     // check admin commands
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
     if (msg[0].toLowerCase() === '_clearspam') CLEAR_SPAM(Zyborg);
+    if (msg[0].toLowerCase() === '_hourlychecks') HourlyChecks(Zyborg);
     if (msg[0].toLowerCase() === '_restart') HEROKU_RESTART();
   } else if (message.channel.name === 'submit-freebies') {
     // check admin permission
