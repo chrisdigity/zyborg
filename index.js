@@ -518,22 +518,22 @@ Zyborg.on('messageCreate', message => {
           let rewardsStr = '';
           const reactions = [];
           const reactionIds = [
-            '<a:zero:896568307140952105>',
-            '<a:one:896567480770760754>',
-            '<a:two:896568959959187476>',
-            '<a:three:896569027655270481>',
-            '<a:four:896569269779841074>',
-            '<a:five:896569279632252979>',
-            '<a:six:896569289853784084>',
-            '<a:seven:896569303011323954>',
-            '<a:eight:896569314113617960>',
-            '<a:nine:896569324737810503>',
-            '<a:regional_indicator_a:896569343968690216>',
-            '<a:regional_indicator_b:896569359617642536>',
-            '<a:regional_indicator_c:896569385643311195>',
-            '<a:regional_indicator_d:896569402403741738>',
-            '<a:regional_indicator_e:896569420598620211>',
-            '<a:regional_indicator_f:896569441909886976>'
+            '896568307140952105', // zero
+            '896567480770760754', // one
+            '896568959959187476', // two
+            '896569027655270481', // three
+            '896569269779841074', // four
+            '896569279632252979', // five
+            '896569289853784084', // six
+            '896569303011323954', // seven
+            '896569314113617960', // eight
+            '896569324737810503', // nine
+            '896569343968690216', // regional_indicator_a
+            '896569359617642536', // regional_indicator_b
+            '896569385643311195', // regional_indicator_c
+            '896569402403741738', // regional_indicator_d
+            '896569420598620211', // regional_indicator_e
+            '896569441909886976' // regional_indicator_f
           ];
           for (let i = 0; i < json.rewards.length; i++) {
             const reward = json.rewards[i];
@@ -554,7 +554,7 @@ Zyborg.on('messageCreate', message => {
             for (let i = 0; i < json.rewards.length; i++) {
               sent.react(reactionIds[i]).catch(error => {
                 message.reply(
-                  `Error adding reaction "${reactionIds[i]}": ${error}`
+                  `Error adding reaction ID "${reactionIds[i]}": ${error}`
                 ).catch(console.error);
               });
             }
