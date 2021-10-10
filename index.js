@@ -585,6 +585,8 @@ Zyborg.on('messageCreate', message => {
     }
     // check admin commands
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
+    const cmds = ['_clearspam', '_hourlychecks', '_restart'];
+    if (cmds.includes(msg[0].toLowerCase())) message.react('👍');
     if (msg[0].toLowerCase() === '_clearspam') CLEAR_SPAM(Zyborg);
     if (msg[0].toLowerCase() === '_hourlychecks') HourlyChecks(Zyborg);
     if (msg[0].toLowerCase() === '_restart') HEROKU_RESTART();
