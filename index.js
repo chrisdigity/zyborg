@@ -518,11 +518,22 @@ Zyborg.on('messageCreate', message => {
           let rewardsStr = '';
           const reactions = [];
           const reactionIds = [
-            ':zero:', ':one:', ':two:', ':three:', ':four:',
-            ':five:', ':six:', ':seven:', ':eight:', ':nine:',
-            ':regional_indicator_a:', ':regional_indicator_b:',
-            ':regional_indicator_c:', ':regional_indicator_d:',
-            ':regional_indicator_e:', ':regional_indicator_f:'
+            '<a:zero:896568307140952105>',
+            '<a:one:896567480770760754>',
+            '<a:two:896568959959187476>',
+            '<a:three:896569027655270481>',
+            '<a:four:896569269779841074>',
+            '<a:five:896569279632252979>',
+            '<a:six:896569289853784084>',
+            '<a:seven:896569303011323954>',
+            '<a:eight:896569314113617960>',
+            '<a:nine:896569324737810503>',
+            '<a:regional_indicator_a:896569343968690216>',
+            '<a:regional_indicator_b:896569359617642536>',
+            '<a:regional_indicator_c:896569385643311195>',
+            '<a:regional_indicator_d:896569402403741738>',
+            '<a:regional_indicator_e:896569420598620211>',
+            '<a:regional_indicator_f:896569441909886976>'
           ];
           for (let i = 0; i < json.rewards.length; i++) {
             const reward = json.rewards[i];
@@ -541,7 +552,7 @@ Zyborg.on('messageCreate', message => {
           ).then(sent => {
             // add reactions to message
             for (let i = 0; i < json.rewards.length; i++) {
-              sent.react(reactionIds[i]).catch(error => {
+              sent.react(`\\${reactionIds[i]}`).catch(error => {
                 message.reply(
                   `Error adding reaction "${reactionIds[i]}": ${error}`
                 ).catch(console.error);
