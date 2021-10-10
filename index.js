@@ -484,7 +484,7 @@ Zyborg.on('messageCreate', message => {
     if (msg[0].toLowerCase() === '_restart') HEROKU_RESTART();
   } else if (message.channel.name === 'submit-freebies') {
     // check admin permission
-    if (member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
+    if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
     // likely freebies submission, try JSON conversion
     try {
       const json = JSON.parse(message.content);
