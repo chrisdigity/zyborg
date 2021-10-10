@@ -162,25 +162,24 @@ const HourlyChecks = function (BOT) {
     const getChannelWhereNameIncludes = (name) => {
       return guild.channels.cache.find(channel => channel.name.includes(name));
     };
+    console.log('searching for freebies channel...');
     // check guild has a freebies channel (text channel)
     const freebiesChannel = getChannelWhereNameIncludes('freebies');
     if (freebiesChannel && freebiesChannel.type === 'GUILD_TEXT') {
+      console.log('found freebies channel');
       // scan messages of freebies in channel
       freebiesChannel.messages.cache.each(freebieMsg => {
         // split message content into lines of readable data
         const msgLines = freebieMsg.content.split('\n');
         const getLineIndexWhereLineStartsWith = (str) => {
           return msgLines.findIndex(line => line.startsWith(str));
-        };
-        const getLineIndexWhereLineIncludes = (str) => {
-          return msgLines.findIndex(line => line.includes(str));
-        };
-        // get index of FreebieID and split ID values into fId
-        const fIdIdx = getLineIndexWhereLineIncludes(FREEBIEKEY);
+        }; // get index of FreebieID and split ID values into fId
+        const fIdIdx = getLineIndexWhereLineStartsWith(FREEBIEKEY);
         const fId = (msgLines[fIdIdx] || '').split(' ');
         // obtain epoch and submissionId from fId
         const epoch = Number(fId[1]);
         const submissionId = fId[3];
+        console.log(fIdIdx, fId, epoch, submissionId);
         // check freebies that have ended by checking epoch
         if (epoch && epoch < now) {
           console.log('FREEBIE ENDED!!! RUN THE NUMBERS STEVE!');
