@@ -534,16 +534,16 @@ Zyborg.on('messageCreate', message => {
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             'To enter, simply "react" with the rewards\'s emoji.\n' +
-            'You may react to all rewards, however, you can only win ONE.\n' +
-            'Rewards are distributed* using Cryptographically Secure RNG.\n' +
+            'You may react to all rewards, but you can only win ONE.\n' +
+            'Rewards are distributed* using Crypto-Secure RNG.\n' +
             '* *`Recently Active` members will be given priority.*\n\n' +
             '__**Rewards:**__\n' + rewardsStr + '\nGood Luck!'
           ).then(sent => {
             // add reactions to message
-            for (const emoji in reactions) {
-              sent.react(emoji).catch(error => {
+            for (let i = 0; i < json.rewards.length; i++) {
+              sent.react(reactionIds[i]).catch(error => {
                 message.reply(
-                  `Error adding reaction "${emoji}": ${error}`
+                  `Error adding reaction "${reactionIds[i]}": ${error}`
                 ).catch(console.error);
               });
             }
