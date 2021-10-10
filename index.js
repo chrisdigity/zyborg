@@ -488,6 +488,7 @@ Zyborg.on('messageCreate', message => {
     // likely freebies submission, try JSON conversion
     try {
       const json = JSON.parse(message.content);
+      const rolesCache = message.guild.roles.cache;
       // check json data meets all requirements
       if (!json || typeof json !== 'object') {
         message.reply('Invalid JSON').catch(console.error);
@@ -516,7 +517,13 @@ Zyborg.on('messageCreate', message => {
         } else {
           // build rewards string
           let rewardsStr = '';
-          const reactions = [];
+          const date = new Date();
+          const drawDateOpts = { dateStyle: 'full', timeStyle: 'long' };
+          const drawDateStr =
+            new Intl.DateTimeFormat('en-AU', drawDateOpts).format(date);
+          const findActiveRole = (role) => role.name === 'Recently Active';
+          const activeRoleId =
+            (rolesCache.find(findActiveRole) || { id: 0 }).id;
           const unicodeReactions = [
             '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣',
             '🇦', '🇧', '🇨', '🇩', '🇪', '🇫'
@@ -524,17 +531,19 @@ Zyborg.on('messageCreate', message => {
           for (let i = 0; i < json.rewards.length; i++) {
             const reward = json.rewards[i];
             rewardsStr += `${unicodeReactions[i]} ${reward.name}\n`;
-            reactions.push(unicodeReactions[i]);
           }
           freebiesCh.send(
-            '*a wild freebie raffle has appeared...*\n\n' +
+            '*a wild freebie offer has appeared...*\n\n' +
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
-            'To enter, simply "react" with the rewards\'s emoji.\n' +
-            'You may react to all rewards, but you can only win ONE.\n' +
-            'Rewards are distributed* using Crypto-Secure RNG.\n' +
-            '* *`Recently Active` members will be given priority.*\n\n' +
-            '__**Rewards:**__\n' + rewardsStr + '\nGood Luck!'
+            '• To enter, simply "react" with the reward\'s emoji.\n' +
+            '• You may react to all rewards, but you can only win ONE.\n' +
+            `• Rewards will be distributed after ${drawDateStr}, ` +
+            'via a Cryptographically Secure RNG process, ' +
+            `prioritising <@&${activeRoleId}> members.\n\n` +
+            '__**Rewards:**__\n' + rewardsStr + 
+            `__**Timestamp:**__ ${date.getTime()}\n` +
+            '\nGood Luck!'
           ).then(sent => {
             // add reactions to message
             for (let i = 0; i < json.rewards.length; i++) {
