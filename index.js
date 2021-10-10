@@ -168,76 +168,78 @@ const HourlyChecks = function (BOT) {
     if (freebiesChannel && freebiesChannel.type === 'GUILD_TEXT') {
       console.log('found freebies channel');
       // scan messages of freebies in channel
-      freebiesChannel.messages.cache.each(freebieMsg => {
-        // split message content into lines of readable data
-        const msgLines = freebieMsg.content.split('\n');
-        const getLineIndexWhereLineStartsWith = (str) => {
-          return msgLines.findIndex(line => line.startsWith(str));
-        }; // get index of FreebieID and split ID values into fId
-        const fIdIdx = getLineIndexWhereLineStartsWith(FREEBIEKEY);
-        const fId = (msgLines[fIdIdx] || '').split(' ');
-        // obtain epoch and submissionId from fId
-        const epoch = Number(fId[1]);
-        const submissionId = fId[3];
-        console.log(fIdIdx, fId, epoch, submissionId);
-        // check freebies that have ended by checking epoch
-        if (epoch && epoch < now) {
-          console.log('FREEBIE ENDED!!! RUN THE NUMBERS STEVE!');
-          msgLines[fIdIdx] = msgLines[fIdIdx].replace(FREEBIEKEY, ENDEDKEY);
-          // read submission message as json
-          const submissionCh = getChannelWhereNameIncludes('submit-freebies');
-          submissionCh.messages.fetch(submissionId).then(submissionMessage => {
-            const json = JSON.parse(submissionMessage);
-            const rewards = new Collection();
-            const winnerIds = []; // keep record of winners, by user.Iid
-            // add reaction emoji and rewards as key value pairs in collection
-            for (i = 0; i < json.rewards.length; i++) {
-              rewards.set(FreebieEmojis[i], json.rewards[i]);
-            }
-            // process all options randomly
-            while (rewards.size) {
-              const rewardsKey = rewards.randomKey();
-              const reward = rewards[rewardsKey];
-              let [activeCandidates, candidates] =
-                freebieMsg.reactions.cache.find(reaction => {
-                  return reaction.emoji === rewardsKey; // get reaction users
-                })?.users.cache.filter(user => !user.bot // ... excluding bots
-                ).filter(user => winnerIds.includes(user.id) // ... and winners
-                ).partition(user => { // ... and split users by recently active
-                  return guild.members.fetch(user.id).roles.has(rActiveRoleId);
-                });
-              // overwrite candidates with active candidates, if any
-              if (activeCandidates && activeCandidates.size > 0) {
-                candidates = activeCandidates;
-              } // select random candidate and add to winners, if any
-              if (candidates && candidates.size) {
-                const winner = candidates.random();
-                winnerIds.push(winner.id);
-                // edit associated reward line with winner
-                const rewardLine = getLineIndexWhereLineStartsWith(rewardsKey);
-                msgLines[rewardLine] =
-                  `~~${msgLines[rewardLine]}~~\n^^ Winner: ${winner}`;
-                // DM user with reward
-                winner.send(
-                  '*For your safety, NEVER click links or share passwords ' +
-                  'and login information to bots in messages. Please use ' +
-                  'Links provided in the Z Unbreakables Server.*\n\n' +
-                  '**CONGRATULATIONS!** You have received a reward ' +
-                  'from __Z Unbreakables__ Server Freebies Channel.\n\n' +
-                  `__**Reward:**__ ${reward.name}\n` +
-                  `__**Key:**__ ||${reward.key}||`
-                ).catch(error => submissionCh.send(
-                  `@Admin, Failed to send __${reward.name}__ reward key ` +
-                  `to user ${winner} -> ${winner.tag}; ${error}`
-                )).catch(console.error);
+      freebiesChannel.messages.fetch().then(freebiesMessages => {
+        freebiesMessages.each(freebieMsg => {
+          // split message content into lines of readable data
+          const msgLines = freebieMsg.content.split('\n');
+          const getLineIndexWhereLineStartsWith = (str) => {
+            return msgLines.findIndex(line => line.startsWith(str));
+          }; // get index of FreebieID and split ID values into fId
+          const fIdIdx = getLineIndexWhereLineStartsWith(FREEBIEKEY);
+          const fId = (msgLines[fIdIdx] || '').split(' ');
+          // obtain epoch and submissionId from fId
+          const epoch = Number(fId[1]);
+          const submissionId = fId[3];
+          console.log(fIdIdx, fId, epoch, submissionId);
+          // check freebies that have ended by checking epoch
+          if (epoch && epoch < now) {
+            console.log('FREEBIE ENDED!!! RUN THE NUMBERS STEVE!');
+            msgLines[fIdIdx] = msgLines[fIdIdx].replace(FREEBIEKEY, ENDEDKEY);
+            // read submission message as json
+            const submissionCh = getChannelWhereNameIncludes('submit-freebies');
+            submissionCh.messages.fetch(submissionId).then(submissionMessage => {
+              const json = JSON.parse(submissionMessage);
+              const rewards = new Collection();
+              const winnerIds = []; // keep record of winners, by user.Iid
+              // add reaction emoji and rewards as key value pairs in collection
+              for (i = 0; i < json.rewards.length; i++) {
+                rewards.set(FreebieEmojis[i], json.rewards[i]);
               }
-              // drop reward from collection and continue
-              rewards.delete(rewardsKey);
-            }
-            // send edited freebies message
-            freebieMsg.edit(msgLines.join('\n')).catch(console.error);
-          }).catch(console.error);
-        }
+              // process all options randomly
+              while (rewards.size) {
+                const rewardsKey = rewards.randomKey();
+                const reward = rewards[rewardsKey];
+                let [activeCandidates, candidates] =
+                  freebieMsg.reactions.cache.find(reaction => {
+                    return reaction.emoji === rewardsKey; // get reaction users
+                  })?.users.cache.filter(user => !user.bot // ... excluding bots
+                  ).filter(user => winnerIds.includes(user.id) // ... and winners
+                  ).partition(user => { // ... and split users by recently active
+                    return guild.members.fetch(user.id).roles.has(rActiveRoleId);
+                  });
+                // overwrite candidates with active candidates, if any
+                if (activeCandidates && activeCandidates.size > 0) {
+                  candidates = activeCandidates;
+                } // select random candidate and add to winners, if any
+                if (candidates && candidates.size) {
+                  const winner = candidates.random();
+                  winnerIds.push(winner.id);
+                  // edit associated reward line with winner
+                  const rewardLine = getLineIndexWhereLineStartsWith(rewardsKey);
+                  msgLines[rewardLine] =
+                    `~~${msgLines[rewardLine]}~~\n^^ Winner: ${winner}`;
+                  // DM user with reward
+                  winner.send(
+                    '*For your safety, NEVER click links or share passwords ' +
+                    'and login information to bots in messages. Please use ' +
+                    'Links provided in the Z Unbreakables Server.*\n\n' +
+                    '**CONGRATULATIONS!** You have received a reward ' +
+                    'from __Z Unbreakables__ Server Freebies Channel.\n\n' +
+                    `__**Reward:**__ ${reward.name}\n` +
+                    `__**Key:**__ ||${reward.key}||`
+                  ).catch(error => submissionCh.send(
+                    `@Admin, Failed to send __${reward.name}__ reward key ` +
+                    `to user ${winner} -> ${winner.tag}; ${error}`
+                  )).catch(console.error);
+                }
+                // drop reward from collection and continue
+                rewards.delete(rewardsKey);
+              }
+              // send edited freebies message
+              freebieMsg.edit(msgLines.join('\n')).catch(console.error);
+            }).catch(console.error);
+          }
+        });
       });
     }
     // check new day trigger - progress recently active
