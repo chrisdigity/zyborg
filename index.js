@@ -421,67 +421,143 @@ Zyborg.on('messageCreate', message => {
   if (!member || member.user.bot) return;
   else RESET_RECENT(member); // update recently active role if not a bot
   // command messages must be in spam channel
-  if (message.channel.id !== CHID_SPAM) return;
-  // split message
-  const msg = message.content.split(' ');
-  // check basic commands
-  if (msg[1] && msg[0].toLowerCase() === '_lang') {
-    let name = member.nickname || member.user.username;
-    // modifier removal
-    if (name.includes(', [')) {
-      name = name.substring(0, name.lastIndexOf(', ['));
-    } else if (name.includes(' [')) {
-      name = name.substring(0, name.lastIndexOf(' ['));
-    } else if (name.includes('[')) {
-      name = name.substring(0, name.lastIndexOf('['));
-    }
-    // end modifier removal
-    member.setNickname(`${msg[2] || name}, [${msg[1]}]`).then(() => {
-      return message.channel.send(
-        'Intro preference embeded in Nickname :thumbup:');
-    }).catch(error => {
-      console.error(error);
-      message.channel.send(error.message).catch(console.error);
-    });
-  } else if (msg[1] && ['_color', '_colour'].indexOf(msg[0]) > -1) {
-    // check graphene rank
-    if (member.roles.cache.find(role => role.name === 'Graphene')) {
-      function getRoleByName (name) {
-        const role = member.guild.roles.cache.find(role => role.name === name);
-        return role && typeof role === 'object' ? role.id : null;
+  if (message.channel.name === 'bot-spam') {
+    // split message
+    const msg = message.content.split(' ');
+    // check basic commands
+    if (msg[1] && msg[0].toLowerCase() === '_lang') {
+      let name = member.nickname || member.user.username;
+      // modifier removal
+      if (name.includes(', [')) {
+        name = name.substring(0, name.lastIndexOf(', ['));
+      } else if (name.includes(' [')) {
+        name = name.substring(0, name.lastIndexOf(' ['));
+      } else if (name.includes('[')) {
+        name = name.substring(0, name.lastIndexOf('['));
       }
-      // define colors
-      const colorIds = {
-        magenta: getRoleByName('Magenta'),
-        red: getRoleByName('Red'),
-        orange: getRoleByName('Orange'),
-        yellow: getRoleByName('Yellow'),
-        green: getRoleByName('Green'),
-        cyan: getRoleByName('Cyan'),
-        azure: getRoleByName('Azure'),
-        blue: getRoleByName('Blue')
-      };
-      const addColor = colorIds[msg[1].toLowerCase()] || [];
-      const hasColors = Object.values(colorIds).filter(roleId => {
-        return member.roles.cache.has(roleId);
-      }); // remove existing color/s
-      member.roles.remove(hasColors).then(member => {
-        if (Object.keys(colorIds).indexOf(msg[1].toLowerCase()) > -1) {
-          return member.roles.add(addColor).then(() => {
-            return message.reply('Colour preference changed successfully.');
-          });
-        } else if (msg[1].toLowerCase() === 'clear') {
-          return message.reply('Colour preference cleared.');
-        } else return message.reply('Colour preference unknown...');
+      // end modifier removal
+      member.setNickname(`${msg[2] || name}, [${msg[1]}]`).then(() => {
+        return message.channel.send(
+          'Intro preference embeded in Nickname :thumbup:');
       }).catch(error => {
-        return message.reply(`Colour Preference failed: ${error}`);
-      }).catch(console.error);
+        console.error(error);
+        message.channel.send(error.message).catch(console.error);
+      });
+    } else if (msg[1] && ['_color', '_colour'].indexOf(msg[0]) > -1) {
+      // check graphene rank
+      if (member.roles.cache.find(role => role.name === 'Graphene')) {
+        function getRoleByName (name) {
+          const role = member.guild.roles.cache.find(role => role.name === name);
+          return role && typeof role === 'object' ? role.id : null;
+        }
+        // define colors
+        const colorIds = {
+          magenta: getRoleByName('Magenta'),
+          red: getRoleByName('Red'),
+          orange: getRoleByName('Orange'),
+          yellow: getRoleByName('Yellow'),
+          green: getRoleByName('Green'),
+          cyan: getRoleByName('Cyan'),
+          azure: getRoleByName('Azure'),
+          blue: getRoleByName('Blue')
+        };
+        const addColor = colorIds[msg[1].toLowerCase()] || [];
+        const hasColors = Object.values(colorIds).filter(roleId => {
+          return member.roles.cache.has(roleId);
+        }); // remove existing color/s
+        member.roles.remove(hasColors).then(member => {
+          if (Object.keys(colorIds).indexOf(msg[1].toLowerCase()) > -1) {
+            return member.roles.add(addColor).then(() => {
+              return message.reply('Colour preference changed successfully.');
+            });
+          } else if (msg[1].toLowerCase() === 'clear') {
+            return message.reply('Colour preference cleared.');
+          } else return message.reply('Colour preference unknown...');
+        }).catch(error => {
+          return message.reply(`Colour Preference failed: ${error}`);
+        }).catch(console.error);
+      }
+    }
+    // check admin commands
+    if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
+    if (msg[0].toLowerCase() === '_clearspam') CLEAR_SPAM(Zyborg);
+    if (msg[0].toLowerCase() === '_restart') HEROKU_RESTART();
+  } else if (message.channel.name === 'submit-freebies') {
+    // check admin permission
+    if (member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
+    // likely freebies submission, try JSON conversion
+    try {
+      const json = JSON.parse(message.content);
+      // check json data meets all requirements
+      if (typeof json !== 'object') {
+        message.reply('Invalid JSON').catch(console.error);
+      } else if (typeof json.uid !== 'string' && json.uid) {
+        message.reply('Invalid [uid]').catch(console.error);
+      } else if (typeof json.title !== 'string' && json.title) {
+        message.reply('Invalid [title]').catch(console.error);
+      } else if (typeof json.desc !== 'string' && json.desc) {
+        message.reply('Invalid [desc]').catch(console.error);
+      } else if (!Array.isArray(json.rewards) && json.rewards.length > 1) {
+        message.reply('Invalid [rewards]').catch(console.error);
+      } else {
+        for (let i = 0; i < json.rewards.length; i++) {
+          const reward = json.rewards[i];
+          if (typeof reward !== 'object') {
+            message.reply(`Invalid reward[${i}] object`).catch(console.error);
+          } else if (typeof reward.name !== 'string' && reward.name) {
+            message.reply(`Invalid reward[${i}].name`).catch(console.error);
+          } else if (typeof reward.key !== 'string' && reward.key) {
+            message.reply(`Invalid reward[${i}].key`).catch(console.error);
+          }
+        }
+        // submission is accepted, post raffle to freebies channel
+        const freebiesCh =
+          Zyborg.channels.cache.find(ch => ch.name.includes('freebies'));
+        if (!freebiesCh) {
+          message.reply('Could not find freebies channel').catch(console.error);
+        } else {
+          // build rewards string
+          let rewardsStr = '';
+          const reactions = [];
+          const reactionIds = [
+            ':zero:', ':one:', ':two:', ':three:', ':four:',
+            ':five:', ':six:', ':seven:', ':eight:', ':nine:',
+            ':regional_indicator_a:', ':regional_indicator_b:',
+            ':regional_indicator_c:', ':regional_indicator_d:',
+            ':regional_indicator_e:', ':regional_indicator_f:'
+          ];
+          for (let i = 0; i < json.rewards.length; i++) {
+            const reward = json.rewards[i];
+            rewardsStr += `${reactionIds[i]} ${reward.name}\n`;
+            reactions.push(reactionIds[i]);
+          }
+          freebiesCh.send(
+            '*a wild freebie raffle has appeared...*\n\n' +
+            `__**${json.title}**__\n` + `${json.desc}\n\n` +
+            '__**Rules:**__\n' +
+            'To enter, simply "react" with the rewards\'s emoji.\n' +
+            'You may react to all rewards, however, you can only win ONE.\n' +
+            'Rewards are distributed* using Cryptographically Secure RNG.\n' +
+            '* *`Recently Active` members will be given priority.*\n\n' +
+            '__**Rewards:**__\n' + rewardsStr + '\nGood Luck!'
+          ).then(sent => {
+            // add reactions to message
+            for (const emoji in reactions) {
+              sent.react(emoji).catch(error => {
+                message.reply(
+                  `Error adding reaction "${emoji}": ${error}`
+                ).catch(console.error);
+              });
+            }
+          }).catch(error => {
+            return message.reply(`Error: ${error}`);
+          }).catch(console.error);
+        }
+      }
+    } catch (ignore) {
+      message.reply('Error. Could not parse JSON data').catch(console.error);
     }
   }
-  // check admin commands
-  if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
-  if (msg[0].toLowerCase() === '_clearspam') CLEAR_SPAM(Zyborg);
-  if (msg[0].toLowerCase() === '_restart') HEROKU_RESTART();
 });
 
 /* ...on guildMemberAdd, log event (hello) */
