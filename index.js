@@ -487,27 +487,26 @@ Zyborg.on('messageCreate', message => {
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
     // likely freebies submission, try JSON conversion
     try {
-      console.log(`message.content: "${message.content}"`);
       const json = JSON.parse(message.content);
       // check json data meets all requirements
-      if (typeof json !== 'object') {
+      if (!json || typeof json !== 'object') {
         message.reply('Invalid JSON').catch(console.error);
-      } else if (typeof json.uid !== 'string' && json.uid) {
+      } else if (!json.uid || typeof json.uid !== 'string') {
         message.reply('Invalid [uid]').catch(console.error);
-      } else if (typeof json.title !== 'string' && json.title) {
+      } else if (!json.title || typeof json.title !== 'string') {
         message.reply('Invalid [title]').catch(console.error);
-      } else if (typeof json.desc !== 'string' && json.desc) {
+      } else if (!json.desc || typeof json.desc !== 'string') {
         message.reply('Invalid [desc]').catch(console.error);
-      } else if (!Array.isArray(json.rewards) && json.rewards.length > 1) {
+      } else if (!Array.isArray(json.rewards) || json.rewards.length < 1) {
         message.reply('Invalid [rewards]').catch(console.error);
       } else {
         for (let i = 0; i < json.rewards.length; i++) {
           const reward = json.rewards[i];
-          if (typeof reward !== 'object') {
+          if (!reward || typeof reward !== 'object') {
             message.reply(`Invalid reward[${i}] object`).catch(console.error);
-          } else if (typeof reward.name !== 'string' && reward.name) {
+          } else if (!reward.name || typeof reward.name !== 'string') {
             message.reply(`Invalid reward[${i}].name`).catch(console.error);
-          } else if (typeof reward.key !== 'string' && reward.key) {
+          } else if (!reward.key || typeof reward.key !== 'string') {
             message.reply(`Invalid reward[${i}].key`).catch(console.error);
           }
         }
@@ -555,8 +554,8 @@ Zyborg.on('messageCreate', message => {
           }).catch(console.error);
         }
       }
-    } catch (ignore) {
-      message.reply('Error. Could not parse JSON data').catch(console.error);
+    } catch (error) {
+      message.reply(`Error parsing JSON data: ${error}`).catch(console.error);
     }
   }
 });
