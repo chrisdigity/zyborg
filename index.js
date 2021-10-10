@@ -164,7 +164,7 @@ const CLEAR_SPAM = function (BOT) {
     /* featch messages from channel */
     channel.messages.fetch().then(messages => {
       /* if more than 1 message ... */
-      if (messages.size > 1) {
+      if (messages.size > 10) {
         /* ... remove all messages */
         messages.each(message => {
           message.delete().then(msg => {
