@@ -208,7 +208,7 @@ const HourlyChecks = function (BOT) {
             // partition candidates from recently active
             const members = new Collection();
             await Promise.allSettled(users.map(async user => {
-              return await guild.members.fetch(user.id);
+              members.set(user.id, await guild.members.fetch(user.id));
             }));
             console.log('members:'); members.each(member => console.log(member.user));
             let candidates = members.partition(member => {
