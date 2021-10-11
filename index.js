@@ -635,8 +635,11 @@ Zyborg.on('messageCreate', message => {
           // build rewards string
           let rewardsStr = '';
           const date = new Date(json.epoch);
-          const opts = { dateStyle: 'full', timeStyle: 'long' };
-          const dateStr = new Intl.DateTimeFormat('en-AU', opts).format(date);
+          const dateStr = date.toLocaleString('en-AU', {
+            timeZone: 'Australia/Brisbane',
+            timeStyle: 'long',
+            dateStyle: 'full'
+          });
           const findActiveRole = (role) => role.name === 'Recently Active';
           const activeRoleId =
             (rolesCache.find(findActiveRole) || { id: 0 }).id;
@@ -650,10 +653,9 @@ Zyborg.on('messageCreate', message => {
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             '• To enter, simply "react" with the reward\'s emoji.\n' +
-            (json.rewards.length > 1 // conditional rule for > 1 rewards
+            (json.rewards.length < 2 // conditional rule for > 1 rewards
               ? '• You may react to all rewards, but you can only win ONE.\n'
-              : '') +
-            `• Winners are drawn after ${dateStr}, ` +
+              : '') + `• Winners are drawn after ${dateStr}, ` +
             `prioritising <@&${activeRoleId}> members.\n\n` +
             `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!'
           ).then(sent => {
