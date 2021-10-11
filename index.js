@@ -652,7 +652,7 @@ Zyborg.on('messageCreate', message => {
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             '• To enter, simply "react" with the reward\'s emoji.\n' +
-            (json.rewards.length < 2 // conditional rule for > 1 rewards
+            (json.rewards.length > 1 // conditional rule for > 1 rewards
               ? '• You may react to all rewards, but you can only win ONE.\n'
               : '') + `• Winners are drawn after ${dateStr}, ` +
             `prioritising <@&${activeRoleId}> members.\n\n` +
