@@ -198,7 +198,7 @@ const HourlyChecks = function (BOT) {
           // process all options randomly
           while (rewards.size) {
             const rewardsKey = rewards.randomKey();
-            const reward = rewards[rewardsKey];
+            const reward = rewards.get(rewardsKey);
             const reaction = freebieMsg.reactions.cache.find(reaction => {
               return reaction.emoji.toString() === rewardsKey;
             }); // get users of reaction, excluding bots and winners
