@@ -251,20 +251,21 @@ const HourlyChecks = function (BOT) {
     // check new day trigger - progress recently active
     if (new Date().getHours() < LastHour) {
       // for every member of this guild, progress recently active status
-      guild.members.cache.each(gMember => {
-        // only process members with Recently Active role
-        if (gMember.roles.cache.has(rActiveRoleId)) {
-        // find aeons ago
-          for (i = 0; i < rARoleIds.length; i++) {
-            if (gMember.roles.cache.has(rARoleIds[i])) break;
-          } // check final aeons ago, remove recently active role
-          if (i === 0) gMember.roles.remove(rActiveRoleId).catch(console.error);
-          // check progressable aeons ago, add next / remove previous
-          if (i > 0) gMember.roles.add(rARoleIds[i - 1]).catch(console.error);
-          if (i < rARoleIds.length) {
-            gMember.roles.remove(rARoleIds[i]).catch(console.error);
+      guild.members.fetch().then(members => {
+        members.each(member => {
+          // only process members with Recently Active role
+          if (member.roles.cache.has(rActiveRoleId)) {
+            for (i = 0; i < rARoleIds.length; i++) { // find aeons ago
+              if (member.roles.cache.has(rARoleIds[i])) break;
+            } // check final aeons ago, remove recently active role
+            if (i === 0) member.roles.remove(rActiveRoleId).catch(console.error);
+            // check progressable aeons ago, add next / remove previous
+            if (i > 0) member.roles.add(rARoleIds[i - 1]).catch(console.error);
+            if (i < rARoleIds.length) {
+              member.roles.remove(rARoleIds[i]).catch(console.error);
+            }
           }
-        }
+        });
       });
     }
   });
