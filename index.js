@@ -231,10 +231,8 @@ const HourlyChecks = function (BOT) {
               // DM user with reward
               winner.send(
                 '*For your safety, NEVER click links or share passwords ' +
-                'and login information to bots in messages. Please use ' +
-                'Links provided in the Z Unbreakables Server.*\n\n' +
-                '**CONGRATULATIONS!** You have received a reward ' +
-                'from __Z Unbreakables__ Server Freebies Channel.\n\n' +
+                'and login information to bots in messages. If necessary, ' +
+                'links will be provided in Z Unbreakables.*\n\n' +
                 `__**Reward:**__ ${reward.name}\n` +
                 `__**Key:**__ ||${reward.key}||`
               ).catch(error => submissionCh.send(
