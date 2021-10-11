@@ -205,8 +205,11 @@ const HourlyChecks = function (BOT) {
             const users = await reaction.users.fetch(); // get non-winner users
             users.sweep(user => !user.bot && !winnerIds.includes(user.id));
             // partition candidates from recently active
-            let candidates = users.partition(user => {
-              return guild.members.fetch(user.id).roles.has(rActiveRoleId);
+            const members = await Promise.all(users.mapValues(async user => {
+              return await guild.members.fetch(user.id);
+            }));
+            let candidates = members.partition(member => {
+              return member.roles.cache.has(rActiveRoleId);
             });
             // disregard active candidates, if none
             if (!candidates[0] && !candidates[0].size) {
