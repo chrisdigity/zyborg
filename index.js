@@ -203,7 +203,7 @@ const HourlyChecks = function (BOT) {
               return reaction.emoji.toString() === rewardsKey;
             }); // get users of reaction, excluding bots and winners
             const users = await reaction.users.fetch(); // get non-winner users
-            users.sweep(user => !user.bot && !winnerIds.includes(user.id));
+            users.sweep(user => user.bot || winnerIds.includes(user.id));
             console.log('users:'); users.each(console.log);
             // partition candidates from recently active
             const members = new Collection();
