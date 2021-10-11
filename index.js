@@ -217,9 +217,8 @@ const HourlyChecks = function (BOT) {
             console.log('candidates[0]:'); candidates[0].each(candidate => console.log(candidate.user));
             console.log('candidates[1]:'); candidates[1].each(candidate => console.log(candidate.user));
             // disregard active candidates, if none
-            if (!candidates[0] && !candidates[0].size) {
-              candidates = candidates.pop();
-            } else candidates = candidates.shift();
+            if (candidates[0].size) candidates = candidates.shift();
+            else candidates = candidates.pop();
             // select random candidate and add to winners, if any
             if (candidates && candidates.size) {
               const winner = candidates.random();
