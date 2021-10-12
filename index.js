@@ -161,11 +161,9 @@ const HourlyChecks = function (BOT) {
     const getChannelWhereNameIncludes = (name) => {
       return guild.channels.cache.find(channel => channel.name.includes(name));
     };
-    console.log('searching for freebies channel...');
     // check guild has a freebies channel (text channel)
     const freebiesChannel = getChannelWhereNameIncludes('freebies');
     if (freebiesChannel && freebiesChannel.type === 'GUILD_TEXT') {
-      console.log('found freebies channel');
       // scan messages of freebies in channel
       const freebiesMessages = await freebiesChannel.messages.fetch();
       freebiesMessages.each(async freebieMsg => {
@@ -179,10 +177,8 @@ const HourlyChecks = function (BOT) {
         // obtain epoch and submissionId from fId
         const epoch = Number(fId[1]);
         const submissionId = fId[3];
-        console.log(fIdIdx, fId, epoch, submissionId);
         // check freebies that have ended by checking epoch
         if (epoch && epoch < now) {
-          console.log('FREEBIE ENDED!!! RUN THE NUMBERS STEVE!');
           msgLines[fIdIdx] = msgLines[fIdIdx].replace(FREEBIEKEY, ENDEDKEY);
           // read submission message as json
           const submissionCh = getChannelWhereNameIncludes('submit-freebies');
@@ -203,18 +199,14 @@ const HourlyChecks = function (BOT) {
             }); // get users of reaction, excluding bots and winners
             const users = await reaction.users.fetch(); // get non-winner users
             users.sweep(user => user.bot || winnerIds.includes(user.id));
-            console.log('users:'); users.each(console.log);
             // partition candidates from recently active
             const members = new Collection();
             await Promise.allSettled(users.map(async user => {
               members.set(user.id, await guild.members.fetch(user.id));
             }));
-            console.log('members:'); members.each(member => console.log(member.user));
             let candidates = members.partition(member => {
               return member.roles.cache.has(rActiveRoleId);
             });
-            console.log('candidates[0]:'); candidates[0].each(candidate => console.log(candidate.user));
-            console.log('candidates[1]:'); candidates[1].each(candidate => console.log(candidate.user));
             // disregard active candidates, if none
             if (candidates[0].size) candidates = candidates.shift();
             else candidates = candidates.pop();
@@ -228,11 +220,11 @@ const HourlyChecks = function (BOT) {
               `~~${msgLines[rewardLine]}~~\n^^ Winner: ${winner}`;
               // DM user with reward
               winner.send(
-                '*For your safety, NEVER click links or share passwords ' +
-                'and login information to bots in messages. If necessary, ' +
-                'links will be provided in Z Unbreakables.*\n\n' +
-                `__**Reward:**__ ${reward.name}\n` +
-                `__**Key:**__ ||${reward.key}||`
+                '*Remember to be suspicious of Discord Bots asking for ' +
+                'login information or sharing links to external websites. ' +
+                'If necessary, links will be provided in Z Unbreakables.*\n\n' +
+                `__**${reward.name}**__\n||${reward.key}||` +
+                '*^^ Click spoiler to reveal reward*'
               ).catch(error => submissionCh.send(
                 `@Admin, Failed to send __${reward.name}__ reward key ` +
                 `to user ${winner} -> ${winner.tag}; ${error}`
