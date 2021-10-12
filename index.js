@@ -272,6 +272,7 @@ const HourlyChecks = function (BOT) {
 };
 
 const ProcessFreebie = function (message, isEdit) {
+  console.log('enter process freebie', isEdit);
   try { // try JSON conversion
     const json = JSON.parse(message.content);
     const rolesCache = message.guild.roles.cache;
@@ -297,6 +298,7 @@ const ProcessFreebie = function (message, isEdit) {
           message.reply(`Invalid reward[${i}].key`).catch(console.error);
         }
       }
+      console.log('freebie ok');
       // submission is accepted, post raffle to freebies channel
       const freebiesCh =
         Zyborg.channels.cache.find(ch => ch.name.includes('freebies'));
@@ -691,9 +693,11 @@ Zyborg.on('messageCreate', message => {
 });
 
 Zyborg.on('messageUpdate', (old, message) => {
+  console.log('message update; channel', message.channel.name);
   const member = message.member;
   if (message.channel.name === 'submit-freebies') { // check admin permission
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
+    console.log('passed admin permission');
     ProcessFreebie(message, true); // process frebie update
   }
 });
