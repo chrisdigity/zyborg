@@ -141,7 +141,7 @@ const RESET_RECENT = (member) => {
 };
 
 /* function to check for new day and process daily functions */
-const LastHour = new Date().getHours();
+let LastHour = new Date().getHours();
 const HourlyChecks = function (BOT) {
   // for each guild the bot is apart of...
   BOT.guilds.cache.each(async guild => {
@@ -247,7 +247,9 @@ const HourlyChecks = function (BOT) {
       });
     }
     // check new day trigger - progress recently active
-    if (new Date().getHours() < LastHour) {
+    const ProgressActive = Boolean(new Date().getHours() < LastHour);
+    LastHour = new Date().getHours();
+    if (ProgressActive) {
       // for every member of this guild, progress recently active status
       guild.members.fetch().then(members => {
         members.each(member => {
