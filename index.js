@@ -271,6 +271,91 @@ const HourlyChecks = function (BOT) {
   });
 };
 
+const ProcessFreebie = function (message, isEdit) {
+  try { // try JSON conversion
+    const json = JSON.parse(message.content);
+    const rolesCache = message.guild.roles.cache;
+    // check json data meets all requirements
+    if (!json || typeof json !== 'object') {
+      message.reply('Invalid JSON').catch(console.error);
+    } else if (!json.epoch || typeof json.epoch !== 'number') {
+      message.reply('Invalid [epoch]').catch(console.error);
+    } else if (!json.title || typeof json.title !== 'string') {
+      message.reply('Invalid [title]').catch(console.error);
+    } else if (!json.description || typeof json.description !== 'string') {
+      message.reply('Invalid [description]').catch(console.error);
+    } else if (!Array.isArray(json.rewards) || json.rewards.length < 1) {
+      message.reply('Invalid [rewards]').catch(console.error);
+    } else {
+      for (let i = 0; i < json.rewards.length; i++) {
+        const reward = json.rewards[i];
+        if (!reward || typeof reward !== 'object') {
+          message.reply(`Invalid reward[${i}] object`).catch(console.error);
+        } else if (!reward.name || typeof reward.name !== 'string') {
+          message.reply(`Invalid reward[${i}].name`).catch(console.error);
+        } else if (!reward.key || typeof reward.key !== 'string') {
+          message.reply(`Invalid reward[${i}].key`).catch(console.error);
+        }
+      }
+      // submission is accepted, post raffle to freebies channel
+      const freebiesCh =
+        Zyborg.channels.cache.find(ch => ch.name.includes('freebies'));
+      if (!freebiesCh) {
+        message.reply('Could not find freebies channel').catch(console.error);
+      } else {
+        // build rewards string
+        let rewardsStr = '';
+        const date = new Date(json.epoch);
+        const dateStr = date.toLocaleString('en-AU', {
+          timeZone: 'Australia/Brisbane',
+          timeStyle: 'long',
+          dateStyle: 'full'
+        });
+        const findActiveRole = (role) => role.name === 'Recently Active';
+        const activeRoleId =
+          (rolesCache.find(findActiveRole) || { id: 0 }).id;
+        for (let i = 0; i < json.rewards.length; i++) {
+          const reward = json.rewards[i];
+          rewardsStr += `${FreebieEmojis[i]} ${reward.name}\n`;
+        }
+        const freebieMessage = '*a wild freebie offer has appeared...*\n\n' +
+          `${FREEBIEKEY} ${date.getTime()} / ${message.id}\n\n` +
+          `__**${json.title}**__\n` + `${json.description}\n\n` +
+          '__**Rules:**__\n' +
+          '• To enter, simply "react" with the reward\'s emoji.\n' +
+          (json.rewards.length > 1 // conditional rule for > 1 rewards
+            ? '• You may react to all rewards, but you can only win ONE.\n'
+            : '') + `• Winners are drawn after ${dateStr}, ` +
+          `prioritising <@&${activeRoleId}> members.\n\n` +
+          `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!';
+        // check if process was called with edited message
+        if (isEdit) {
+          freebiesCh.messages.fetch().then(msgs => {
+            const oldMsg = msgs.find(msg => msg.content.includes(message.id));
+            if (oldMsg) oldMsg.edit(freebieMessage).catch(console.error);
+            else message.reply('Error: could not find freebie message');
+          });
+        } else {
+          freebiesCh.send(freebieMessage).then(sent => {
+            // add reactions to message
+            for (let i = 0; i < json.rewards.length; i++) {
+              sent.react(FreebieEmojis[i]).catch(error => {
+                message.reply(
+                  `Error adding reaction "${FreebieEmojis[i]}": ${error}`
+                ).catch(console.error);
+              });
+            }
+          }).catch(error => {
+            return message.reply(`Error: ${error}`);
+          }).catch(console.error);
+        }
+      }
+    }
+  } catch (error) {
+    message.reply(`Error parsing JSON data: ${error}`).catch(console.error);
+  }
+};
+
 /* ZYBORG function to clear spam channel every ~24 hours */
 const CLEAR_SPAM = function (BOT) {
   BOT.channels.fetch(CHID_SPAM).then(channel => {
@@ -601,81 +686,15 @@ Zyborg.on('messageCreate', message => {
   } else if (message.channel.name === 'submit-freebies') {
     // check admin permission
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
-    // likely freebies submission, try JSON conversion
-    try {
-      const json = JSON.parse(message.content);
-      const rolesCache = message.guild.roles.cache;
-      // check json data meets all requirements
-      if (!json || typeof json !== 'object') {
-        message.reply('Invalid JSON').catch(console.error);
-      } else if (!json.epoch || typeof json.epoch !== 'number') {
-        message.reply('Invalid [epoch]').catch(console.error);
-      } else if (!json.title || typeof json.title !== 'string') {
-        message.reply('Invalid [title]').catch(console.error);
-      } else if (!json.description || typeof json.description !== 'string') {
-        message.reply('Invalid [description]').catch(console.error);
-      } else if (!Array.isArray(json.rewards) || json.rewards.length < 1) {
-        message.reply('Invalid [rewards]').catch(console.error);
-      } else {
-        for (let i = 0; i < json.rewards.length; i++) {
-          const reward = json.rewards[i];
-          if (!reward || typeof reward !== 'object') {
-            message.reply(`Invalid reward[${i}] object`).catch(console.error);
-          } else if (!reward.name || typeof reward.name !== 'string') {
-            message.reply(`Invalid reward[${i}].name`).catch(console.error);
-          } else if (!reward.key || typeof reward.key !== 'string') {
-            message.reply(`Invalid reward[${i}].key`).catch(console.error);
-          }
-        }
-        // submission is accepted, post raffle to freebies channel
-        const freebiesCh =
-          Zyborg.channels.cache.find(ch => ch.name.includes('freebies'));
-        if (!freebiesCh) {
-          message.reply('Could not find freebies channel').catch(console.error);
-        } else {
-          // build rewards string
-          let rewardsStr = '';
-          const date = new Date(json.epoch);
-          const dateStr = date.toLocaleString('en-AU', {
-            timeZone: 'Australia/Brisbane',
-            timeStyle: 'long',
-            dateStyle: 'full'
-          });
-          const findActiveRole = (role) => role.name === 'Recently Active';
-          const activeRoleId =
-            (rolesCache.find(findActiveRole) || { id: 0 }).id;
-          for (let i = 0; i < json.rewards.length; i++) {
-            const reward = json.rewards[i];
-            rewardsStr += `${FreebieEmojis[i]} ${reward.name}\n`;
-          }
-          freebiesCh.send(
-            '*a wild freebie offer has appeared...*\n\n' +
-            `${FREEBIEKEY} ${date.getTime()} / ${message.id}\n\n` +
-            `__**${json.title}**__\n` + `${json.description}\n\n` +
-            '__**Rules:**__\n' +
-            '• To enter, simply "react" with the reward\'s emoji.\n' +
-            (json.rewards.length > 1 // conditional rule for > 1 rewards
-              ? '• You may react to all rewards, but you can only win ONE.\n'
-              : '') + `• Winners are drawn after ${dateStr}, ` +
-            `prioritising <@&${activeRoleId}> members.\n\n` +
-            `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!'
-          ).then(sent => {
-            // add reactions to message
-            for (let i = 0; i < json.rewards.length; i++) {
-              sent.react(FreebieEmojis[i]).catch(error => {
-                message.reply(
-                  `Error adding reaction "${FreebieEmojis[i]}": ${error}`
-                ).catch(console.error);
-              });
-            }
-          }).catch(error => {
-            return message.reply(`Error: ${error}`);
-          }).catch(console.error);
-        }
-      }
-    } catch (error) {
-      message.reply(`Error parsing JSON data: ${error}`).catch(console.error);
-    }
+    ProcessFreebie(message, false);
+  }
+});
+
+Zyborg.on('messageUpdate', (old, message) => {
+  const member = message.member;
+  if (message.channel.name === 'submit-freebies') { // check admin permission
+    if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
+    ProcessFreebie(message, true); // process frebie update
   }
 });
 
