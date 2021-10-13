@@ -595,7 +595,6 @@ Zyborg.on('messageCreate', message => {
     if (!member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) return;
     try { // try JSON conversion
       const json = JSON.parse(message.content);
-      const rolesCache = message.guild.roles.cache;
       // check json data meets all requirements
       if (!json || typeof json !== 'object') {
         message.reply('Invalid JSON').catch(console.error);
@@ -632,9 +631,6 @@ Zyborg.on('messageCreate', message => {
             timeStyle: 'long',
             dateStyle: 'full'
           });
-          const findActiveRole = (role) => role.name === 'Recently Active';
-          const activeRoleId =
-            (rolesCache.find(findActiveRole) || { id: 0 }).id;
           for (let i = 0; i < json.rewards.length; i++) {
             const reward = json.rewards[i];
             rewardsStr += `${FreebieEmojis[i]} ${reward.name}\n`;
@@ -651,7 +647,7 @@ Zyborg.on('messageCreate', message => {
             '• To enter, simply "react" with the reward\'s emoji.\n' +
             freebieMessageMultipleRewards +
             '• Recently active members will have choice priority.\n' +
-            `• Winners are drawn after ${dateStr}\n\n` +
+            `• Raffle ends ${dateStr}\n\n` +
             `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!';
           // check if process was called with edited message
           if (json.edit) {
