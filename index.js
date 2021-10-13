@@ -639,15 +639,19 @@ Zyborg.on('messageCreate', message => {
             const reward = json.rewards[i];
             rewardsStr += `${FreebieEmojis[i]} ${reward.name}\n`;
           }
-          const freebieMessage = '*a wild freebie offer has appeared...*\n\n' +
+          // conditional rule for > 1 rewards
+          const freebieMessageMultipleRewards = json.rewards.length > 1
+            ? '• You may react to all rewards, but you can only win ONE.\n'
+            : '';
+          const freebieMessage =
+            '*@everyone, a wild freebie offer has appeared...*\n\n' +
             `${FREEBIEKEY} ${date.getTime()} / ${message.id}\n\n` +
             `__**${json.title}**__\n` + `${json.description}\n\n` +
             '__**Rules:**__\n' +
             '• To enter, simply "react" with the reward\'s emoji.\n' +
-            (json.rewards.length > 1 // conditional rule for > 1 rewards
-              ? '• You may react to all rewards, but you can only win ONE.\n'
-              : '') + `• Winners are drawn after ${dateStr}, ` +
-            `prioritising <@&${activeRoleId}> members.\n\n` +
+            freebieMessageMultipleRewards +
+            '• Recently active members will have choice priority.\n' +
+            `• Winners are drawn after ${dateStr}\n\n` +
             `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!';
           // check if process was called with edited message
           if (json.edit) {
