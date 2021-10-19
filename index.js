@@ -152,11 +152,11 @@ const HourlyChecks = function (BOT) {
     };// define recently active role ids
     const rActiveRoleId = getRoleIdByName('Recently Active');
     const rARoleIds = [
-      getRoleIdByName('9 æons ago'), getRoleIdByName('8 æons ago'),
-      getRoleIdByName('7 æons ago'), getRoleIdByName('6 æons ago'),
-      getRoleIdByName('5 æons ago'), getRoleIdByName('4 æons ago'),
-      getRoleIdByName('3 æons ago'), getRoleIdByName('2 æons ago'),
-      getRoleIdByName('1 æons ago')
+      getRoleIdByName('9 days ago'), getRoleIdByName('8 days ago'),
+      getRoleIdByName('7 days ago'), getRoleIdByName('6 days ago'),
+      getRoleIdByName('5 days ago'), getRoleIdByName('4 days ago'),
+      getRoleIdByName('3 days ago'), getRoleIdByName('2 days ago'),
+      getRoleIdByName('1 day ago')
     ];
     const getChannelWhereNameIncludes = (name) => {
       return guild.channels.cache.find(channel => channel.name.includes(name));
