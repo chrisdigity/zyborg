@@ -305,7 +305,9 @@ const CLEAR_SPAM = function (BOT) {
 
 /* Zyborg function to play alert */
 const PLAY_NEXT_ALERT = connection => {
+  console.log('enter play next alert...');
   if (AlertQueue[0].alert.length) {
+    console.log('play alert...');
     const alert = AlertQueue[0].alert.shift();
     const stream = new PassThrough();
     const resource = createAudioResource(stream);
@@ -318,10 +320,18 @@ const PLAY_NEXT_ALERT = connection => {
       '&c=mp3&f=48khz_16bit_stereo&src=' + encodeURIComponent(alert.text);
     get(url, res => res.pipe(stream));
     player.play(resource);
-    player.once(AudioPlayerStatus.Idle, () => PLAY_NEXT_ALERT(connection));
-    player.once('error', () => PLAY_NEXT_ALERT(connection));
+    player.once(AudioPlayerStatus.Idle, () => {
+      console.log('player idle...');
+      PLAY_NEXT_ALERT(connection);
+    });
+    player.once('error', () => {
+      console.log('player error...');
+      PLAY_NEXT_ALERT(connection);
+    });
     connection.subscribe(player);
+    console.log('player subscribed...');
   } else {
+    console.log('alert queue end...');
     Vactive = false;
     AlertQueue.shift();
     connection.destroy();
@@ -331,7 +341,9 @@ const PLAY_NEXT_ALERT = connection => {
 
 /* Zyborg function to check/play next alert */
 const CHECK_ALERTS = () => {
+  console.log('enter check alerts...');
   if (!Vactive && AlertQueue.length) {
+    console.log('alert exists...');
     Vactive = true;
     const connection = joinVoiceChannel({
       channelId: AlertQueue[0].channel.id,
