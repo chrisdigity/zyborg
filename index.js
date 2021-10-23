@@ -18,6 +18,7 @@ const {
   AudioPlayerStatus,
   createAudioPlayer,
   createAudioResource,
+  getVoiceConnection,
   joinVoiceChannel,
   NoSubscriberBehavior,
   VoiceConnectionStatus
@@ -54,7 +55,9 @@ const FreebieEmojis = [
 
 const MS = {
   day: 1000 * 60 * 60 * 24,
-  hour: 1000 * 60 * 60
+  hour: 1000 * 60 * 60,
+  minute: 1000 * 60,
+  second: 1000
 };
 
 /* Channel IDs */
@@ -304,10 +307,15 @@ const CLEAR_SPAM = function (BOT) {
 };
 
 /* Zyborg function to play alert */
-const PLAY_NEXT_ALERT = connection => {
-  console.log('enter play next alert...');
-  if (AlertQueue[0].alert.length) {
-    console.log('play alert...');
+const PLAY_NEXT_ALERT = () => {
+  if (!Vactive && AlertQueue.length) {
+    Vactive = true;
+    joinVoiceChannel({
+      channelId: AlertQueue[0].channel.id,
+      guildId: AlertQueue[0].channel.guild.id,
+      adapterCreator: AlertQueue[0].channel.guild.voiceAdapterCreator
+    }).once(VoiceConnectionStatus.Ready, PLAY_NEXT_ALERT);
+  } else if (AlertQueue[0].alert.length) {
     const alert = AlertQueue[0].alert.shift();
     const stream = new PassThrough();
     const resource = createAudioResource(stream);
@@ -320,39 +328,21 @@ const PLAY_NEXT_ALERT = connection => {
       '&c=mp3&f=48khz_16bit_stereo&src=' + encodeURIComponent(alert.text);
     get(url, res => res.pipe(stream));
     player.play(resource);
-    player.once(AudioPlayerStatus.Idle, () => {
-      console.log('player idle...');
-      PLAY_NEXT_ALERT(connection);
-    });
-    player.once('error', () => {
-      console.log('player error...');
-      PLAY_NEXT_ALERT(connection);
-    });
-    connection.subscribe(player);
-    console.log('player subscribed...');
+    player.once('error', PLAY_NEXT_ALERT);
+    player.once(AudioPlayerStatus.Idle, PLAY_NEXT_ALERT);
+    getVoiceConnection(AlertQueue[0].channel.guild.id).subscribe(player);
   } else {
-    console.log('alert queue end...');
-    Vactive = false;
-    AlertQueue.shift();
-    connection.destroy();
-    setTimeout(CHECK_ALERTS, 100);
-  }
-};
-
-/* Zyborg function to check/play next alert */
-const CHECK_ALERTS = () => {
-  console.log('enter check alerts...');
-  if (!Vactive && AlertQueue.length) {
-    console.log('alert exists...');
-    Vactive = true;
-    const connection = joinVoiceChannel({
-      channelId: AlertQueue[0].channel.id,
-      guildId: AlertQueue[0].channel.guild.id,
-      adapterCreator: AlertQueue[0].channel.guild.voiceAdapterCreator
-    });
-    connection.on(VoiceConnectionStatus.Ready, () => {
-      PLAY_NEXT_ALERT(connection);
-    });
+    const lastAlert = AlertQueue.shift();
+    if (AlertQueue.length) {
+      joinVoiceChannel({
+        channelId: AlertQueue[0].channel.id,
+        guildId: AlertQueue[0].channel.guild.id,
+        adapterCreator: AlertQueue[0].channel.guild.voiceAdapterCreator
+      }).once(VoiceConnectionStatus.Ready, PLAY_NEXT_ALERT);
+    } else {
+      getVoiceConnection(lastAlert.channel.guild.id).disconnect();
+      Vactive = false;
+    }
   }
 };
 
@@ -369,8 +359,8 @@ const QUEUE_ALERT = function (next) {
     }
   }
   if (i === AlertQueue.length) AlertQueue.push(next);
-  // activate alerts
-  CHECK_ALERTS();
+  // activate alerts, ONLY IF NOT ALREADY ACTIVE
+  if (!Vactive) PLAY_NEXT_ALERT();
 };
 
 const UPDATE_USER = function (userid, update) {
