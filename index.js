@@ -226,8 +226,8 @@ const HourlyChecks = function (BOT) {
                 '*Remember to be suspicious of Discord Bots asking for ' +
                 'login information or sharing links to external websites. ' +
                 'If necessary, links will be provided in Z Unbreakables.*\n\n' +
-                `__**${reward.name}**__\n||${reward.key}||` +
-                '*^^ Click spoiler to reveal reward*'
+                `__**${reward.name}**__\n||${reward.key}||\n` +
+                '*^^ Click this dark spoiler box*'
               ).catch(error => submissionCh.send(
                 `@Admin, Failed to send __${reward.name}__ reward key ` +
                 `to user ${winner} -> ${winner.tag}; ${error}`
@@ -295,6 +295,9 @@ const CLEAR_SPAM = function (BOT) {
               }, {
                 name: 'Colour Preference, prefix: ( _ )',
                 value: '*Available to Graphene rank only.*\nmagenta red orange yellow green cyan azure blue\n```_colour magenta\n_colour clear```'
+              }, {
+                name: 'Channel Music, prefix: ( - )',
+                value: '*Ensure channel members are ok with tunes.*\n```-play Big Bootie 20\n-volume 20\n-pause```'
               }).setTimestamp()
           ]
         }).catch(console.error);
