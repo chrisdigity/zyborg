@@ -778,11 +778,14 @@ Zyborg.on('voiceStateUpdate', (old, cur) => {
     lang = 'en-au';
     voice = 'isla';
   }
-  // decode erroneous repetition
+  // detect erroneous repetition
   if (name.match(/(.{2,})[ ]\1+/gi) || name.match(/(.{2,})\1{2,}/gi)) {
-    let akaname = name.replace(/(.{2,})[ ]?\1+/gi, '$1');
-    akaname = akaname.replace(/(.)\1{2,}/gi, '$1');
-    name += `(ay kay ay, ${akaname})`;
+    if (name === member.user.username) {
+      // attempt to decode erroneous repetition
+      let akaname = name.replace(/(.{2,})[ ]?\1+/gi, '$1');
+      akaname = akaname.replace(/(.)\1{2,}/gi, '$1');
+      name += `(ay kay ay, ${akaname})`;
+    } else name += `(ay kay ay, ${member.user.username})`;
   }
   // detect action
   if (action === 'streaming') {
