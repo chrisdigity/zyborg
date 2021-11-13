@@ -183,6 +183,8 @@ const HourlyChecks = function (BOT) {
         // check freebies that have ended by checking epoch
         if (epoch && epoch < now) {
           msgLines[fIdIdx] = msgLines[fIdIdx].replace(FREEBIEKEY, ENDEDKEY);
+          // IMMEDIATELY END THE FREEBIE, AVOIDING WINNER RECURSION
+          await freebieMsg.edit(msgLines.join('\n'));
           // read submission message as json
           const submissionCh = getChannelWhereNameIncludes('submit-freebies');
           const submissionMsg = await submissionCh.messages.fetch(submissionId);
@@ -217,17 +219,19 @@ const HourlyChecks = function (BOT) {
             if (candidates && candidates.size) {
               const winner = candidates.random();
               winnerIds.push(winner.id);
+              // LOG WINNERS IN CASE OF UNEXPECTED ERROR
+              console.log(`${winner.user.tag} won: ${reward.name}`);
               // edit associated reward line with winner
               const rewardLine = getLineIndexWhereLineStartsWith(rewardsKey);
               msgLines[rewardLine] =
               `~~${msgLines[rewardLine]}~~\n^^ Winner: ${winner}`;
               // DM user with reward
               winner.send(
-                '*Remember to be suspicious of Discord Bots asking for ' +
-                'login information or sharing links to external websites. ' +
-                'If necessary, links will be provided in Z Unbreakables.*\n\n' +
-                `__**${reward.name}**__\n||${reward.key}||\n` +
-                '*^^ Click this dark spoiler box*'
+                '__**FREE GAME WOOT WOOT!!!**__\n' +
+                `${reward.name}\n||${reward.key}||\n` +
+                '*^^ Click this dark spoiler box*\n\n' +
+                '*Unless specified, games are redeemable via Steam.*\n' +
+                '*Steam Client -> ADD A GAME -> Activate a product on steam...*'
               ).catch(error => submissionCh.send(
                 `@Admin, Failed to send __${reward.name}__ reward key ` +
                 `to user ${winner} -> ${winner.tag}; ${error}`
@@ -607,8 +611,6 @@ Zyborg.on('messageCreate', message => {
         message.reply('Invalid [epoch]').catch(console.error);
       } else if (!json.title || typeof json.title !== 'string') {
         message.reply('Invalid [title]').catch(console.error);
-      } else if (!json.description || typeof json.description !== 'string') {
-        message.reply('Invalid [description]').catch(console.error);
       } else if (!Array.isArray(json.rewards) || json.rewards.length < 1) {
         message.reply('Invalid [rewards]').catch(console.error);
       } else {
@@ -640,19 +642,14 @@ Zyborg.on('messageCreate', message => {
             const reward = json.rewards[i];
             rewardsStr += `${FreebieEmojis[i]} ${reward.name}\n`;
           }
-          // conditional rule for > 1 rewards
-          const freebieMessageMultipleRewards = json.rewards.length > 1
-            ? '• You may react to all rewards, but you can only win ONE.\n'
-            : '';
           const freebieMessage =
-            '*@everyone, a wild freebie offer has appeared...*\n\n' +
+            '*@everyone, a wild freebie has appeared...*\n\n' +
             `${FREEBIEKEY} ${date.getTime()} / ${message.id}\n\n` +
-            `__**${json.title}**__\n` + `${json.description}\n\n` +
-            '__**Rules:**__\n' +
-            '• To enter, simply "react" with the reward\'s emoji.\n' +
-            freebieMessageMultipleRewards +
-            '• Recently active members will have choice priority.\n' +
-            `• Raffle ends ${dateStr}\n\n` +
+            `__**${json.title}**__\n\n` +
+            '• To enter, simply click the reward emoji\'s below.\n' +
+            '• You can choose all rewards, but you can only win ONE.\n' +
+            '• Recently active members are rewarded first.\n' +
+            `• Ends ${dateStr}\n\n` +
             `${REWARDSKEY}\n${rewardsStr}\n` + 'Good Luck!';
           // check if process was called with edited message
           if (json.edit) {
