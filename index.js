@@ -568,6 +568,7 @@ Zyborg.on('messageCreate', message => {
         const colorIds = {
           magenta: getRoleByName('Magenta'),
           red: getRoleByName('Red'),
+          bloodorange: getRoleByName('BloodOrange'),
           orange: getRoleByName('Orange'),
           yellow: getRoleByName('Yellow'),
           green: getRoleByName('Green'),
